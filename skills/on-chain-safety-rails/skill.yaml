@@ -1,0 +1,5 @@
+name: "on-chain-safety-rails"
+title: "On-Chain Safety Rails"
+description: "Apply the user's always-on safety rules for on-chain work, including secret handling, simulation before broadcast, confirmation before signing, and minimal approvals."
+category: "Work and knowledge"
+include_in_prompt: true

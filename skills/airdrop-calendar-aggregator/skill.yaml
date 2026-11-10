@@ -1,0 +1,7 @@
+name: airdrop-calendar-aggregator
+title: Airdrop Calendar Aggregator
+description: Routinely scan airdrop aggregators and calendars (airdrops.io, CryptoRank,
+  claim calendars), deduplicate, verify against official sources, and filter only
+  still-open, free or low-cost airdrops with deadlines in WIB.
+category: Work and knowledge
+include_in_prompt: true

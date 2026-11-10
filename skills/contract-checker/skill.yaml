@@ -1,0 +1,5 @@
+name: "contract-checker"
+title: "Contract Checker"
+description: "Quickly check a smart contract, mint or claim URL, or dApp for risk before the user connects a wallet or signs, whenever they paste a contract address, link, or token name and ask if it is safe."
+category: "Work and knowledge"
+include_in_prompt: true

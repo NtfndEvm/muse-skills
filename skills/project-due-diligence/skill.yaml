@@ -1,0 +1,5 @@
+name: "project-due-diligence"
+title: "Project Due Diligence"
+description: "Research one crypto project in depth before the user works on it or invests, covering team, funding, tokenomics, vesting, product, traction, risks, and comparison with similar projects, whenever they ask if a project is worth it or want a DYOR report."
+category: "Work and knowledge"
+include_in_prompt: true

@@ -1,0 +1,5 @@
+name: "free-mint-farming-agent"
+title: "Free-Mint Farming Agent"
+description: "Find and verify free NFT and token mints on BSC for Binance Agent ID holders, using the gate chain in the saved playbook, only when the user asks for a run."
+category: "Work and knowledge"
+include_in_prompt: false

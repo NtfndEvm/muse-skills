@@ -1,0 +1,7 @@
+name: trade-planner-spot
+title: Trade Planner Spot
+description: Build conditional spot trade plans (entry zone, trigger, invalidation/stop,
+  target, expiry) from the user's strategy rules and current market data, or declare
+  NO TRADE.
+category: Work and knowledge
+include_in_prompt: true

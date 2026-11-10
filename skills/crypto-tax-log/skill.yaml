@@ -1,0 +1,5 @@
+name: "crypto-tax-log"
+title: "Crypto Tax Log"
+description: "Record and organize crypto transaction data for tax reporting, including cost basis, realized gains and losses, and annual recaps, whenever the user mentions crypto tax, reporting, capital gains, cost basis, or recording a token sale."
+category: "Work and knowledge"
+include_in_prompt: true

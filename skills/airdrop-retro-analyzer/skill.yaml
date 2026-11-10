@@ -1,0 +1,5 @@
+name: "airdrop-retro-analyzer"
+title: "Airdrop Retro Analyzer"
+description: "Analyze past airdrops to understand eligibility criteria, distribution patterns, rewarded activities, and common mistakes, and draw lessons for similar projects that have not airdropped yet, whenever the user asks about past airdrop criteria or why a wallet did not receive one."
+category: "Work and knowledge"
+include_in_prompt: true

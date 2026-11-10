@@ -1,0 +1,5 @@
+name: multi-token-screener
+title: Multi-Token Screener
+description: 'Scan many Bitget spot pairs in one run and rank them by the user'"'"'s scalping rules (volume, spread, net R:R, daily budget), with decisive verdicts and exact trigger conditions.'
+category: Work and knowledge
+include_in_prompt: true

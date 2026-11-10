@@ -1,0 +1,7 @@
+name: trade-review
+title: Trade Review
+description: 'Evaluate completed trades and trading sessions: compare plan vs execution
+  vs outcome, classify mistakes, calculate per-setup statistics after fees, and suggest
+  improvements only when the sample is sufficient.'
+category: Work and knowledge
+include_in_prompt: true

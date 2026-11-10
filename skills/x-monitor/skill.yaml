@@ -1,0 +1,7 @@
+name: x-monitor
+title: X Monitor
+description: Monitor crypto project accounts on X/Twitter and announcement sources
+  for free (without paid API) to detect TGE, airdrop claims, snapshots, new testnets,
+  mints, and program changes.
+category: Work and knowledge
+include_in_prompt: true

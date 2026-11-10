@@ -1,0 +1,7 @@
+name: trade-journal
+title: Trade Journal
+description: Record spot crypto trade plans and results in a structured way (timestamped
+  plan before outcome, actual execution, fees, result in R) and calculate statistics
+  from those records.
+category: Work and knowledge
+include_in_prompt: true

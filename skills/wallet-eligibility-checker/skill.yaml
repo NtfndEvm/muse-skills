@@ -1,0 +1,7 @@
+name: wallet-eligibility-checker
+title: Wallet Eligibility Checker
+description: Check whether a public wallet address meets an airdrop's criteria, whether
+  a claim is open, and how close the deadline is, using only public address and tx
+  hash, never seed/private keys.
+category: Work and knowledge
+include_in_prompt: true

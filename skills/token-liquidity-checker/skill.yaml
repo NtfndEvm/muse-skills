@@ -1,0 +1,7 @@
+name: token-liquidity-checker
+title: Token Liquidity Checker
+description: Check whether a minted/airdropped/claimed token has a real market, including
+  DEX pairs, liquidity, price, TVL, volume, holder distribution, taxes, and whether
+  it can be sold (honeypot) before recommending or claiming it.
+category: Work and knowledge
+include_in_prompt: true

@@ -1,0 +1,5 @@
+name: "airdrop-tracker"
+title: "Airdrop Tracker"
+description: "Manage and track airdrop, testnet, quest, points, and free-mint activity in a table or spreadsheet, including task status, gas costs, deadlines, claim results, and ROI estimates, whenever the user asks for notes, a tracker, a project list, a cost recap, or a deadline reminder."
+category: "Work and knowledge"
+include_in_prompt: true

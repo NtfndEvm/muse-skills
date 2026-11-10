@@ -1,0 +1,5 @@
+name: "gas-optimizer"
+title: "Gas Optimizer"
+description: "Reduce gas and transaction costs when working on airdrops, testnets, quests, and free mints, including timing, chain choice, bridge strategy, and cost-per-task estimates, whenever the user asks about expensive gas, cheap timing, or whether an activity is worth its gas cost."
+category: "Work and knowledge"
+include_in_prompt: true

@@ -1,0 +1,8 @@
+name: onchain-contract-scanner
+title: On-Chain Contract Scanner
+description: Scan new contracts, free mints, and new tokens on EVM explorers (BscScan,
+  Etherscan, Basescan, Arbiscan) to find free or cheap opportunities and filter dangerous
+  ones, with Sourcify/explorer verification, mint price, wallet ownership, owner/proxy,
+  and gas estimates.
+category: Work and knowledge
+include_in_prompt: true

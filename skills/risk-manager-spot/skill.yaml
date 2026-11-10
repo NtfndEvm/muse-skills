@@ -1,0 +1,7 @@
+name: risk-manager-spot
+title: Risk Manager Spot
+description: 'Manage risk discipline for spot crypto trading/scalping: calculate position
+  size, break-even after fees and spread, liquidity feasibility, order-book impact,
+  daily loss limits, and stop when limits are hit.'
+category: Work and knowledge
+include_in_prompt: true

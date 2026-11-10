@@ -1,0 +1,7 @@
+name: scalp-setup-scanner
+title: Scalp Setup Scanner
+description: 'Screen spot pairs suitable for scalping from public data: volume, volatility,
+  spread, order-book depth, and break-even after fees, rejecting pairs whose costs
+  eat the potential profit.'
+category: Work and knowledge
+include_in_prompt: true

@@ -1,0 +1,5 @@
+name: "social-signal-scanner"
+title: "Social Signal Scanner"
+description: "Assess whether a crypto project's hype and community are organic or manufactured, covering follower quality, bot comment patterns, Discord and Telegram activity, paid shill campaigns, and scam patterns, whenever the user asks if a community is real or a project is being shilled."
+category: "Work and knowledge"
+include_in_prompt: true

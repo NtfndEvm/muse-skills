@@ -1,0 +1,5 @@
+name: "wallet-hygiene"
+title: "Wallet Hygiene"
+description: "Audit and maintain crypto wallet security, including open approvals, spam tokens, burner vs main wallet structure, and routine checklists, whenever the user asks about wallet safety, approvals, revoke, or a suspicious link."
+category: "Work and knowledge"
+include_in_prompt: true
