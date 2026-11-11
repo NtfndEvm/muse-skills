@@ -1,0 +1,5 @@
+name: "fastmint-fcfs"
+title: "Fastmint FCFS"
+description: "Fire a free/paid FCFS mint, claim, or share sale the moment it opens on BSC through the Binance Agentic Wallet (baw), with broadcast inside ~2-5 seconds of the open. Fast recon -> bench -> fire -> report, only on the user's explicit instruction per mint."
+category: "Work and knowledge"
+include_in_prompt: true

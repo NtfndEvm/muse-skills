@@ -11,7 +11,7 @@ dan semua aturan keamanan on-chain berlaku.
 
 | Kelompok | Skill |
 |---|---|
-| Farming & airdrop | `airdrop-hunter`, `airdrop-tracker`, `airdrop-calendar-aggregator`, `airdrop-retro-analyzer`, `x-monitor`, `onchain-contract-scanner`, `free-mint-farming-agent` |
+| Farming & airdrop | `airdrop-hunter`, `airdrop-tracker`, `airdrop-calendar-aggregator`, `airdrop-retro-analyzer`, `x-monitor`, `onchain-contract-scanner`, `free-mint-farming-agent`, `fastmint-fcfs` |
 | Riset proyek | `project-due-diligence`, `social-signal-scanner`, `contract-checker`, `token-liquidity-checker`, `wallet-eligibility-checker` |
 | Trading spot | `scalp-setup-scanner`, `trade-planner-spot`, `risk-manager-spot`, `trade-journal`, `trade-review`, `multi-token-screener` |
 | Biaya & pajak | `gas-optimizer`, `crypto-tax-log` |
