@@ -1,0 +1,5 @@
+name: "unlock-catalyst-calendar"
+title: "Unlock & Catalyst Calendar"
+description: "Memantau jadwal token unlock, listing/delisting, snapshot dan klaim, migrasi token, upgrade jaringan, voting governance, dan pengumuman penting lain untuk token yang user pegang atau pantau, lalu menilai tingkat risiko harganya dan memberi peringatan sebelum waktunya."
+category: "Work and knowledge"
+include_in_prompt: true

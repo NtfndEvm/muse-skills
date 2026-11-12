@@ -1,0 +1,5 @@
+name: "candle-reader-15m"
+title: "Candle Reader 15m"
+description: "Membaca struktur candle timeframe 15 menit secara konsisten dengan definisi tetap: konfirmasi bounce dari support/EMA, konfirmasi breakout, kualitas volume, tren EMA, dan resistance/support berlapis, hanya dari candle yang sudah tutup."
+category: "Work and knowledge"
+include_in_prompt: true

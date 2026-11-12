@@ -1,0 +1,5 @@
+name: "entry-assistant"
+title: "Entry Assistant"
+description: "Membantu saat user bilang ingin masuk ke sebuah token spot: menghitung entry, stop, dan target dari nol berdasarkan struktur candle 15m, menghitung ukuran posisi, fee, break-even, dan R:R bersih, memeriksa semua aturan disiplin user, lalu menyajikan angka dan risikonya secara jujur tanpa memveto keputusan user."
+category: "Work and knowledge"
+include_in_prompt: true

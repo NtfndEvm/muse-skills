@@ -13,7 +13,8 @@ dan semua aturan keamanan on-chain berlaku.
 |---|---|
 | Farming & airdrop | `airdrop-hunter`, `airdrop-tracker`, `airdrop-calendar-aggregator`, `airdrop-retro-analyzer`, `x-monitor`, `onchain-contract-scanner`, `free-mint-farming-agent`, `fastmint-fcfs` |
 | Riset proyek | `project-due-diligence`, `social-signal-scanner`, `contract-checker`, `token-liquidity-checker`, `wallet-eligibility-checker` |
-| Trading spot | `scalp-setup-scanner`, `trade-planner-spot`, `risk-manager-spot`, `trade-journal`, `trade-review`, `multi-token-screener` |
+| Trading spot | `scalp-setup-scanner`, `trade-planner-spot`, `risk-manager-spot`, `trade-journal`, `trade-review`, `multi-token-screener`, `entry-assistant`, `candle-reader-15m` |
+| Kalender & risiko | `unlock-catalyst-calendar` |
 | Biaya & pajak | `gas-optimizer`, `crypto-tax-log` |
 | Keamanan | `on-chain-safety-rails`, `wallet-hygiene` |
 | Gaya bahasa | `natural-bahasa` |
