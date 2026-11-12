@@ -27,7 +27,7 @@ Gunakan parameter yang sama dengan `risk-manager-spot` jika sudah ada.
 - Modal trading: 44 USDT
 - Risiko per trade: ditentukan jarak stop (posisi penuh $44) · nilai posisi maksimum: 100% modal ($44)
 - Batas rugi harian: 5% ($2,20) · jumlah trade maksimum per sesi: 1–2
-- Pair diizinkan: spot Bitget, tanpa big cap (BTC, ETH, BNB, SOL, XRP) · jam sesi (WIB): 24 jam
+- Pair diizinkan: spot bursa, tanpa big cap (BTC, ETH, BNB, SOL, XRP) · jam sesi (WIB): 24 jam
 - Likuiditas minimum: volume 24j ≥ $100k, spread ≤ [ISI]%, penyerapan order book ≤ [ISI]%
 - Fee maker/taker: belum terverifikasi (asumsi ilustratif 0,1% / 0,1%)
 - R:R bersih minimum: 1,5
@@ -38,7 +38,7 @@ Gunakan parameter yang sama dengan `risk-manager-spot` jika sudah ada.
 ## Alur Kerja
 
 ### 1. Tangkap niat dengan minimal pertanyaan
-Pastikan token/pair, venue (Bitget spot atau DEX+chain), dan horizon (scalp/lebih lama). Kalau user sudah menyebutnya, jangan tanya lagi. Modal dan risiko memakai parameter; jangan interogasi.
+Pastikan token/pair, venue (bursa spot atau DEX+chain), dan horizon (scalp/lebih lama). Kalau user sudah menyebutnya, jangan tanya lagi. Modal dan risiko memakai parameter; jangan interogasi.
 
 ### 2. Ambil data segar (cantumkan jam WIB)
 - Candle 15m → `candle-reader-15m` (tren, volume, level berlapis, status breakout/bounce, ATR)

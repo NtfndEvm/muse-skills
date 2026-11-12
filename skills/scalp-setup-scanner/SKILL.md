@@ -16,7 +16,7 @@ Menyaring **kelayakan pair**, bukan memprediksi arah. Tujuannya mengeliminasi pa
 6. Bukan nasihat keuangan.
 
 ## Sumber Data
-- **Bitget spot (publik)**: ticker, volume 24j, order book, candle. Tidak perlu API key.
+- **Bursa spot (publik)**: ticker, volume 24j, order book, candle. Tidak perlu API key.
 - **DEX**: agregator publik (DexScreener, GeckoTerminal) untuk likuiditas, volume, pair; wajib dilengkapi `token-liquidity-checker`.
 - Jika sumber tidak dapat diakses, katakan dan berhenti; jangan mengisi dengan tebakan.
 
@@ -45,7 +45,7 @@ Rasio gerak/biaya yang rendah berarti pergerakan harga wajar tidak cukup menutup
 ## Format Laporan
 ```
 ## Pindai Scalping Spot — [tanggal, jam WIB]
-Sumber: Bitget publik ✅ / DEX: ... · Data diambil: ... WIB
+Sumber: bursa publik ✅ / DEX: ... · Data diambil: ... WIB
 Diperiksa: N · Lolos: X · Ditolak: Y
 
 Lolos (urut rasio gerak/biaya):

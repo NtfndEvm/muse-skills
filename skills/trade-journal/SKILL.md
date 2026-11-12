@@ -21,7 +21,7 @@ Tanyakan sekali di mana jurnal disimpan (spreadsheet, CSV, file Markdown/teks ya
 ## Struktur Catatan
 
 **Tab/berkas 1 — Trade** (satu baris per trade):
-`ID | Tanggal-jam rencana (WIB) | Pair | Venue (Bitget/DEX+chain) | Setup | Zona entry | Pemicu | Stop | Target | Berlaku sampai | Checklist (n/N) | Risiko rencana (USDT) | Ukuran rencana | Status`
+`ID | Tanggal-jam rencana (WIB) | Pair | Venue (bursa CEX/DEX+chain) | Setup | Zona entry | Pemicu | Stop | Target | Berlaku sampai | Checklist (n/N) | Risiko rencana (USDT) | Ukuran rencana | Status`
 
 Diisi saat eksekusi/penutupan:
 `Entry aktual | Waktu entry | Ukuran aktual | Exit aktual | Waktu exit | Fee total (USDT) | Slippage (%) | P&L kotor | P&L bersih | Hasil (R) | Stop dipindah? | Sesuai rencana? (ya/tidak) | Catatan`

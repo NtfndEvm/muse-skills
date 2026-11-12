@@ -15,7 +15,7 @@ Menentukan apakah sebuah token **benar-benar punya nilai yang bisa direalisasika
 4. **Harga di agregator bukan harga yang bisa kamu jual.** Likuiditas tipis membuat harga nominal menyesatkan; hitung dampak harga (price impact) untuk jumlah yang kamu pegang.
 5. Jangan memprediksi harga masa depan atau memberi saran investasi. Hanya kondisi pasar saat ini dengan waktu pengecekan.
 6. Selalu cantumkan batas keandalan data: agregator bisa salah, tertinggal, atau dimanipulasi (wash trading, pair palsu).
-7. **Hanya sumber data publik** (data pasar publik Bitget, DexScreener, GeckoTerminal, explorer). Dilarang meminta, menerima, atau memakai API key/kredensial akun bursa, dan dilarang mengakses saldo atau posisi user. Untuk cek token, tidak ada kebutuhan masuk ke akun.
+7. **Hanya sumber data publik** (data pasar publik bursa, DexScreener, GeckoTerminal, explorer). Dilarang meminta, menerima, atau memakai API key/kredensial akun bursa, dan dilarang mengakses saldo atau posisi user. Untuk cek token, tidak ada kebutuhan masuk ke akun.
 8. **Setiap hasil wajib mencantumkan jam pengambilan data (WIB).** Data tanpa waktu atau yang sudah basi untuk keputusan cepat dianggap tidak valid; ambil ulang sebelum dipakai.
 
 ## Alur Pemeriksaan
