@@ -41,6 +41,16 @@ Log jujur kesalahan dan perbaikannya. Ditulis mulai 10 Nov 2026 atas permintaan 
 - **Kenapa salah:** Target diperlakukan sebagai angka tetap, bukan sebagai fungsi dari entry dan stop. Dan aku menyalahkan entry user ("entry-mu mengubah hitungannya") padahal yang salah hitunganku.
 - **Perbaikan:** Setiap kali entry/stop berubah, hitung ulang target dari nol (target = entry + 2x jarak stop), jangan pernah membawa target dari skenario entry lain. Tulis rumus di setiap plan, bukan hanya hasilnya.
 
+### 9. Trade-review UAI terlambat 36 jam
+- **Yang terjadi:** UAI ditutup 11 Nov 03:59 WIB (+0,83R, kemenangan pertama), tapi trade-review baru dibuat 12 Nov 16:01 WIB — setelah user menegur "kamu tidak mengasah skill lagi?".
+- **Kenapa salah:** Aturan cek-diri sendiri bilang review langsung setelah tiap trade ditutup. Aku malah sibuk urusan lain (skill baru, README) dan melewatkannya.
+- **Perbaikan:** Trade-review dikerjakan segera setelah close, tanpa menunggu ditegur. Hasilnya dicatat di trade-journal Pelajaran (UAI: keputusan SALAH karena entry sebelum bounce terkonfirmasi — sama seperti SIGN; exit manual tepat waktu; rekap kumulatif n=3: 1 menang, 2 kalah, rata-rata −0,37R).
+
+### 10. Analisa 14:00 selesai tapi gagal terkirim otomatis
+- **Yang terjadi:** Cron analisa 5 token 12 Nov 14:00 WIB selesai dan laporannya siap, tapi upaya worker mengirim ke WhatsApp ditolak runtime ("cannot target a chat connected to an external messaging service"). Worker menutup tracked item sebagai completed TANPA konfirmasi delivery. Laporan baru sampai ke user 14:06 WIB setelah aku antar manual.
+- **Kenapa salah:** Item ditutup completed padahal delivery belum terkonfirmasi. "Selesai dianalisa" bukan "sampai ke user".
+- **Perbaikan:** Tracked item hanya ditutup setelah delivery terkonfirmasi di chat yang meminta. Kalau pengiriman otomatis gagal, antar manual dan catat kegagalannya — jangan diam.
+
 ## Cara Aku Mengecek Diri Sendiri
 - Setelah tiap trade ditutup: jalankan `trade-review`, tulis pelajaran ke trade-journal.
 - Setiap verdict yang terbukti salah (menolak token yang naik / menerima token yang jatuh): catat di log ini, cari penyebabnya, perbaiki kriteria.
