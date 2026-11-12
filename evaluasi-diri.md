@@ -51,6 +51,33 @@ Log jujur kesalahan dan perbaikannya. Ditulis mulai 10 Nov 2026 atas permintaan 
 - **Kenapa salah:** Item ditutup completed padahal delivery belum terkonfirmasi. "Selesai dianalisa" bukan "sampai ke user".
 - **Perbaikan:** Tracked item hanya ditutup setelah delivery terkonfirmasi di chat yang meminta. Kalau pengiriman otomatis gagal, antar manual dan catat kegagalannya — jangan diam.
 
+## 12 Nov 2026
+
+### 11. Trigger $0,2771 terlalu telat untuk thesis pump CYBER
+- **Yang terjadi:** Untuk thesis pump CYBER sebelum unlock, aku memberi trigger close di atas $0,2771. User menegur: "kalau nunggu 0.277 ya itu udah pump lah aneh." Benar: dari $0,2598 ke $0,2771 itu +6,6% — pump-nya sudah jalan duluan. Trigger itu kubuat dari analisa breakout biasa, bukan untuk menangkap pump dari awal.
+- **Perbaikan:** Untuk thesis front-run/pump, beri level konfirmasi yang lebih awal (tutup di atas $0,2661, +2,4%; atau bounce di support $0,258) dan sebutkan trade-off-nya secara eksplisit: masuk awal = risiko fake-out lebih besar (buktinya breakout 17:25 yang terkonfirmasi berubah jadi penolakan sumbu sejam kemudian). Jangan memberi satu trigger generik untuk dua thesis yang berbeda.
+
+### 12. Analisa hanya muter di token yang user sebutkan (monoton)
+- **Yang terjadi:** Analisa berulang hanya mencakup watchlist user (BEAM, DOS, UAI, CYBER, AIO, BR, ARIA, dll). User menegur 18:24 WIB: "kamu ga analisa token lain selain token yg saya sebutkan... kesannya kayak monoton."
+- **Kenapa salah:** `--discover` hanya mengambil 6-8 mover teratas dan nama yang sama terus muncul di atas. Aku tidak pernah menyaring universe yang lebih luas.
+- **Perbaikan:** Setiap analisa besar sekarang menyaring universe penuh (ticker list, volume ≥$100k, buang saham tokenisasi + nama yang sudah dikenal) lalu scan mover terbesar yang baru. Malam itu juga ketemu MAGMA (pullback ke EMA 20/50 $0,2778-$0,2846) dari 168 token baru. Saringan baru ini masuk ke rutinitas analisa.
+
+### 13. Format teks robotik — tiga kali ditegur dalam satu sore
+- **Yang terjadi:** User menegur formatku tiga kali: "jangan robotic kayak ---- gini" (17:20), "teksnya jangan disatukan" (18:03), "jangan terlalu dipisah/garis baru" (18:06), lalu menunjukkan contoh gaya list yang dia mau.
+- **Perbaikan:** Gaya yang disepakati: list tree rapat pakai ├ untuk item dan └ untuk item terakhir, pemisah ' : ', angka Entry/Stop/Target masing-masing satu baris, tanpa garis "----", tanpa baris kosong berlebihan. Dicatat di MEMORY.md dan dipakai mulai 18:07 WIB.
+
+### 14. Entry CYBER $0,2613 sebelum konfirmasi (12 Nov 2026, 18:01 WIB)
+- **Yang terjadi:** User masuk CYBER di $0,2613 atas inisiatif sendiri, sebelum breakout terkonfirmasi, tepat di bawah resistance berlapis, sebelum unlock. Ini pola yang sama seperti SIGN dan UAI: entry sebelum konfirmasi.
+- **Yang benar dari sisiku:** Tidak veto (sesuai pelajaran UAI), langsung hitung angka dari entry aktual (stop $0,2565, target $0,2709, risiko $0,81, R:R bersih 1,52), tandai pelanggaran aturan secara eksplisit (tanpa breakout terkonfirmasi, target +3,67% di bawah target profit 5%, stop mepet, unlock), dan catat plan + tandai AKTIF di jurnal.
+- **Catatan:** Target +3,67% di bawah target profit 5% user — plan ini tidak memenuhi target profitnya sendiri. Stop $0,2565 hanya 0,28 ATR di bawah low konsolidasi $0,2573, rawan kena sumbu.
+- **Keputusan trade ini:** Belum selesai — posisi masih AKTIF. Evaluasi hasil (target/stop) ditulis setelah close, beserta review-nya.
+
+### Verdict yang terbukti BENAR hari ini (12 Nov 2026)
+- **DOS sengaja TIDAK dibuat LOLOS:** Jam 14:00 harga menempel resistance tiga sentuhan (+0,04%). Harga sesudahnya jatuh ke $0,1658 (16:56 WIB). Aturan ruang 4% bekerja dengan benar — penolakan itu benar, bukan aturan yang rusak. Cabang LOLOS tetap tercakup test sintetis.
+
+### 15. Paper test BEAM (12 Nov 2026, 18:25 WIB) — masih terbuka
+- Pick manual: NO TRADE sekarang; kondisional BEAM (tutup di atas $0,004526 + volume ≥1,5x; entry $0,00453, stop $0,004406, target $0,004778, R:R bersih 1,67). Kriteria evaluasi ditentukan sebelum hasil diketahui dan dicatat di `~/workspace/paper-trade-test.md`. Evaluasi ditulis saat pemicu terjadi atau expiry lewat (2026-11-13 07:00 WIB).
+
 ## Cara Aku Mengecek Diri Sendiri
 - Setelah tiap trade ditutup: jalankan `trade-review`, tulis pelajaran ke trade-journal.
 - Setiap verdict yang terbukti salah (menolak token yang naik / menerima token yang jatuh): catat di log ini, cari penyebabnya, perbaiki kriteria.
