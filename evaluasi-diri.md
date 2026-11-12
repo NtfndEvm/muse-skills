@@ -78,6 +78,11 @@ Log jujur kesalahan dan perbaikannya. Ditulis mulai 10 Nov 2026 atas permintaan 
 ### 15. Paper test BEAM (12 Nov 2026, 18:25 WIB) — masih terbuka
 - Pick manual: NO TRADE sekarang; kondisional BEAM (tutup di atas $0,004526 + volume ≥1,5x; entry $0,00453, stop $0,004406, target $0,004778, R:R bersih 1,67). Kriteria evaluasi ditentukan sebelum hasil diketahui dan dicatat di `~/workspace/paper-trade-test.md`. Evaluasi ditulis saat pemicu terjadi atau expiry lewat (2026-11-13 07:00 WIB).
 
+### 16. Push GitHub kecil-kecil = kartu approval berulang (12 Nov 2026, 18:29 WIB)
+- **Yang terjadi:** Tiga push dalam ~20 menit (VWAP merge, perintah `aktif`, evaluasi) — tiap push memunculkan kartu approval GitHub. User menegur: "kenapa selalu minta approval ke github."
+- **Kenapa:** Push adalah tulis ke layanan luar; runtime minta persetujuan tiap kali karena tidak ada izin tetap untuk GitHub (dicek via daftar izin: hanya ada izin browser sementara). Instruksi user "gausah nunggu approval" hanya menghentikan aku bertanya di chat — kartunya dari pengaman runtime, bukan dariku, dan catatan memori tidak bisa mematikannya.
+- **Perbaikan:** Kumpulkan update skill/evaluasi lalu push sekali jalan, bukan push tiap perubahan kecil. Bila kartu approval punya pilihan "selalu izinkan", user bisa pilih itu.
+
 ## Cara Aku Mengecek Diri Sendiri
 - Setelah tiap trade ditutup: jalankan `trade-review`, tulis pelajaran ke trade-journal.
 - Setiap verdict yang terbukti salah (menolak token yang naik / menerima token yang jatuh): catat di log ini, cari penyebabnya, perbaiki kriteria.
