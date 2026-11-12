@@ -71,3 +71,8 @@ Catatan: sampel kecil bisa menyesatkan; bukan nasihat keuangan.
 - Catat rencana sebelum masuk, bukan setelahnya
 - Catat penyimpangan saat terjadi
 - Jangan menghapus trade yang rugi; jurnal yang diedit mengurangi nilainya
+
+## Tool: trade.py
+Jangan hitung angka trade dengan tangan. Pakai `scripts/trade.py` (stdlib saja; semua rumus dihitung kode — target = entry + 2× jarak stop, net R:R, risiko $, P&L, hasil R):
+`python trade.py plan --pair UAI --entry 0.04072 --stop 0.0399 --setup 2 --trigger "..." --expiry "2026-11-11 05:32 WIB"` · `python trade.py close --id UAI-20261111-01 --exit 0.0414 --alasan "..."` · `python trade.py status`.
+Selalu kerjakan pada jurnal asli `~/workspace/trade-journal.md` (tool membuat cadangan `.bak` sebelum menulis). Untuk uji, pakai `--journal` ke salinan di /tmp dan `--now "YYYY-MM-DD HH:mm"`. Tes: `python -m unittest test_trade` (23 tes). Detail, rumus, dan uji penerimaan ada di `~/workspace/spek-tools-trading.md` §2.
