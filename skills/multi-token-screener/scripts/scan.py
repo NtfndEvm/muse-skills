@@ -17,6 +17,7 @@ yang diasumsikan, cukup ubah dua fungsi itu.
 
 import argparse
 import importlib
+import inspect
 import json
 import math
 import os
@@ -189,7 +190,14 @@ def load_reader():
     return None
 
 
-def call_reader(reader, candles):
+def _accepts_now_ms(fn):
+    try:
+        return "now_ms" in inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+def call_reader(reader, candles, now_ms=None):
     """Panggil candle_reader.read() ASLI (~/workspace/.../candle-reader-15m).
 
     Bentuk asli (sudah dicocokkan 12 Nov 2026 di VM):
@@ -200,13 +208,19 @@ def call_reader(reader, candles):
       trend/resistance/support BERTINGKAT (dict), breakout/bounce dict
       dengan "state". Lihat normalize_reading().
     - candle berjalan dibuang sendiri oleh read() (drop_forming).
+    - now_ms diteruskan ke read(now_ms=...) bila read() menerimanya, supaya penentuan
+      candle berjalan memakai waktu acuan yang SAMA dengan scan.py (penting untuk tes
+      dengan data tersimpan; di produksi nilainya sama dengan jam dinding).
     """
     if hasattr(reader, "parse_candles"):
         parsed = reader.parse_candles(candles)
     else:
         parsed = [{"ts": int(r[0]), "o": float(r[1]), "h": float(r[2]),
                    "l": float(r[3]), "c": float(r[4]), "v": float(r[5])} for r in candles]
-    res = reader.read(parsed)
+    if now_ms is not None and _accepts_now_ms(reader.read):
+        res = reader.read(parsed, now_ms=now_ms)
+    else:
+        res = reader.read(parsed)
     if isinstance(res, dict) and res.get("ok") is False:
         raise ValueError(res.get("reason") or "candle_reader gagal membaca")
     return res
@@ -394,7 +408,7 @@ def analyze(base, tickers, base_url, user_suggested, now_ms, fetcher=fetch_data)
                     resistance=[], support=[], atr_pct=None)
     else:
         try:
-            rd = normalize_reading(call_reader(reader, candles))
+            rd = normalize_reading(call_reader(reader, candles, now_ms))
         except Exception as exc:  # noqa: BLE001 - jangan crash karena satu token
             info.update(status="GAGAL AMBIL DATA", alasan=f"candle_reader error: {exc}")
             return finish(info)

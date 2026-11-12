@@ -98,3 +98,6 @@ Catatan: pembacaan kondisi, bukan sinyal dan bukan nasihat keuangan.
 
 ## Penggunaan Bersama Skill Lain
 Hasilnya menjadi masukan `entry-assistant` (titik entry, stop, target) dan `trade-planner-spot` (checklist). Kondisi event dan unlock dicek lewat `unlock-catalyst-calendar`. Pembacaan yang dipakai untuk keputusan dicatat di `trade-journal` bersama stempel waktunya agar `trade-review` bisa mengevaluasinya.
+
+## VWAP (ditambahkan 12 Nov 2026)
+`read()` menghitung VWAP sesi harian (anchor 00:00 UTC, minimal 10 candle tutup; kurang dari itu `vwap` null + label `VWAP BELUM STABIL`) dan mengembalikannya lewat field `vwap`, `vwap_jarak_atr`, `di_atas_vwap`/`di_bawah_vwap`, `vwap_label`, `vwap_n_candle`. Bentuk input/output yang lama tidak berubah. Catatan penamaan: `last_closed_wib` di sini berarti jam BUKA candle tutup terakhir (mis. 13:45), sedangkan `scan.py` memakai nama yang sama untuk jam TUTUP-nya (14:00) — dua arti untuk satu nama, sengaja tidak disamakan supaya log lama tetap konsisten.

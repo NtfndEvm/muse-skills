@@ -169,5 +169,91 @@ class ReadTests(unittest.TestCase):
         self.assertIn("bukan sinyal", txt)
 
 
+# --------------------------------------------------------------------- VWAP
+from datetime import datetime, timezone  # noqa: E402
+
+
+def utc_ms(y, mo, d, h, mi):
+    return int(datetime(y, mo, d, h, mi, tzinfo=timezone.utc).timestamp() * 1000)
+
+
+def mkc(ts, o, h, l, c, v):
+    return {"ts": ts, "o": o, "h": h, "l": l, "c": c, "v": v}
+
+
+def shifted_range(last_open_ms):
+    """base_range(100) dengan timestamp digeser agar candle terakhir buka di last_open_ms."""
+    return [dict(c, ts=last_open_ms - (99 - i) * STEP) for i, c in enumerate(base_range(100))]
+
+
+class VwapTests(unittest.TestCase):
+    def test_vwap_dihitung_manual(self):
+        # typical: (12+8+10)/3=10 ; (14+10+12)/3=12 ; (11+9+10)/3=10 ; volume 100/300/100
+        base = utc_ms(2026, 11, 11, 0, 0)
+        cs = [mkc(base + i * STEP, 0, h, l, c, v) for i, (h, l, c, v) in
+              enumerate([(12, 8, 10, 100), (14, 10, 12, 300), (11, 9, 10, 100)])]
+        # 7 candle tambahan bervolume 0 agar lolos syarat 10 candle tanpa mengubah VWAP
+        cs += [mkc(base + (i + 3) * STEP, 0, 5, 5, 5, 0) for i in range(7)]
+        res = cr.session_vwap(cs)
+        self.assertEqual(res["n_candle"], 10)
+        self.assertAlmostEqual(res["vwap"], 11.2, places=9)  # (10*100+12*300+10*100)/500
+
+    def test_vwap_reset_sesi_tengah_malam_utc(self):
+        # 12 candle kemarin (harga 100, 21:00-23:45 UTC) lalu 10 candle hari ini (harga 50)
+        d0 = utc_ms(2026, 11, 10, 21, 0)
+        kemarin = [mkc(d0 + i * STEP, 100, 100, 100, 100, 10) for i in range(12)]
+        h0 = utc_ms(2026, 11, 11, 0, 0)
+        hari_ini = [mkc(h0 + i * STEP, 50, 50, 50, 50, 10) for i in range(10)]
+        res = cr.session_vwap(kemarin + hari_ini)
+        self.assertEqual(res["n_candle"], 10)
+        self.assertAlmostEqual(res["vwap"], 50.0, places=9)  # bukan campuran 100 dan 50
+
+    def test_vwap_null_bila_sesi_kurang_dari_10_candle(self):
+        base = utc_ms(2026, 11, 11, 0, 0)
+        cs = [mkc(base + i * STEP, 1, 2, 1, 2, 5) for i in range(9)]
+        res = cr.session_vwap(cs)
+        self.assertIsNone(res["vwap"])
+        self.assertEqual(res["label"], "VWAP BELUM STABIL")
+
+    def test_vwap_jarak_atr_dan_posisi(self):
+        base = utc_ms(2026, 11, 11, 0, 0)
+        cs = [mkc(base + i * STEP, 10, 10, 10, 10, 1) for i in range(10)]
+        cs[-1] = mkc(cs[-1]["ts"], 10, 12, 10, 12, 1)
+        res = cr.session_vwap(cs, atr_value=0.5)
+        self.assertTrue(res["di_atas"])
+        self.assertFalse(res["di_bawah"])
+        self.assertGreater(res["jarak_atr"], 0)
+
+    def test_read_memuat_field_vwap_dan_bentuk_lama_tetap(self):
+        cs = shifted_range(utc_ms(2026, 11, 11, 12, 0))
+        r = cr.read(cs, now_ms=now_after(cs))
+        self.assertTrue(r["ok"])
+        exp = cr.session_vwap(cs)
+        self.assertEqual(r["vwap_n_candle"], 49)  # 00:00..12:00 UTC
+        self.assertAlmostEqual(r["vwap"], round(exp["vwap"], 8), places=8)
+        self.assertEqual(r["di_atas_vwap"], cs[-1]["c"] > exp["vwap"])
+        self.assertEqual(r["di_bawah_vwap"], cs[-1]["c"] < exp["vwap"])
+        self.assertIsNone(r["vwap_label"])
+        # bentuk bertingkat yang dipakai scan.py tidak boleh berubah
+        self.assertIsInstance(r["trend"], dict)
+        self.assertIsInstance(r["resistance"], dict)
+        self.assertIn("level_di_atas", r["resistance"])
+
+    def test_read_vwap_null_dan_berlabel_bila_sesi_baru_mulai(self):
+        cs = shifted_range(utc_ms(2026, 11, 11, 1, 0))  # baru 5 candle sejak 00:00 UTC
+        r = cr.read(cs, now_ms=now_after(cs))
+        self.assertTrue(r["ok"])
+        self.assertIsNone(r["vwap"])
+        self.assertIsNone(r["di_atas_vwap"])
+        self.assertEqual(r["vwap_label"], "VWAP BELUM STABIL")
+        self.assertEqual(r["vwap_n_candle"], 5)
+
+    def test_teks_memuat_baris_vwap(self):
+        cs = shifted_range(utc_ms(2026, 11, 11, 12, 0))
+        self.assertIn("VWAP sesi (00:00 UTC)", cr.to_text(cr.read(cs, now_ms=now_after(cs))))
+        cs2 = shifted_range(utc_ms(2026, 11, 11, 1, 0))
+        self.assertIn("VWAP BELUM STABIL", cr.to_text(cr.read(cs2, now_ms=now_after(cs2))))
+
+
 if __name__ == "__main__":
     unittest.main()

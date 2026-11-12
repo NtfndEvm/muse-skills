@@ -221,5 +221,108 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(scan.eval_trigger({"trigger": "close_di_bawah", "level": 0.005}, r)[0], "TERPICU")
 
 
+# ------------------------------------------------- data nyata DOS + reader asli
+import importlib  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_HERE = Path(__file__).resolve().parent
+_READER_DIR = _HERE.parents[1] / "candle-reader-15m" / "scripts"
+_DOS_FILE = _HERE / "fixtures" / "dos-candles-20261112-1400.json"
+_WIB = timezone(timedelta(hours=7))
+# 14:01 WIB: candle buka 14:00 (volume 800) masih berjalan dan harus dibuang.
+DOS_NOW = int(datetime(2026, 11, 12, 14, 1, tzinfo=_WIB).timestamp() * 1000)
+
+
+def _real_reader():
+    if not (_READER_DIR / "candle_reader.py").exists() or not _DOS_FILE.exists():
+        raise unittest.SkipTest("candle_reader.py asli atau fixture DOS tidak ada")
+    sys.path.insert(0, str(_READER_DIR))
+    return importlib.import_module("candle_reader")
+
+
+def _dos_result():
+    rows = json.loads(_DOS_FILE.read_text(encoding="utf-8"))
+    tick = {"DOSUSDT": scan.parse_ticker(ticker_row("DOS", last="0.1724", bid="0.1723", ask="0.1725",
+                                                    vol="900000", chg="0.03"))}
+    return rows, scan.analyze("DOS", tick, "http://x", set(), DOS_NOW, FakeNet([], rows))
+
+
+class TestDosNyata(unittest.TestCase):
+    """100 candle DOS 15m asli (12 Nov 2026) lewat candle_reader ASLI. Tanpa jaringan."""
+
+    def setUp(self):
+        self.reader = _real_reader()
+        scan._reader = self.reader
+
+    def tearDown(self):
+        scan._reader = None
+
+    def test_waktu_candle_berjalan_dibuang_dan_data_tidak_basi(self):
+        _, r = _dos_result()
+        self.assertEqual(r["status"], "OK")
+        self.assertEqual(r["candle_berjalan_dibuang"], 1)
+        self.assertEqual(r["last_closed_wib"], "2026-11-12 14:00 WIB")
+        self.assertAlmostEqual(r["last_close"], 0.1724)
+        self.assertFalse(r["data_basi"])
+
+    def test_reader_asli_bounce_terkonfirmasi_di_swing_0_1691(self):
+        _, r = _dos_result()
+        self.assertEqual(r["bounce"], "BOUNCE_TERKONFIRMASI")
+        self.assertAlmostEqual(r["bounce_level"], 0.1691)
+        self.assertEqual(r["breakout"], "TIDAK_ADA")
+        self.assertEqual(r["trend"], "RANGE/CAMPUR")
+
+    def test_vwap_dari_reader_cocok_dengan_vwap_py_dan_perhitungan_manual(self):
+        rows, r = _dos_result()
+        self.assertIsNotNone(r["vwap"])
+        self.assertAlmostEqual(r["vwap"], 0.1694, places=4)
+        closed = [c for c in scan.parse_candles(rows) if c[0] + scan.CANDLE_MS <= DOS_NOW]
+        self.assertAlmostEqual(r["vwap"], scan.vwap_mod.session_vwap(closed)["vwap"], places=6)
+        sesi = [c for c in closed if datetime.fromtimestamp(c[0] / 1000, tz=timezone.utc).date()
+                == datetime(2026, 11, 12, tzinfo=timezone.utc).date()]
+        manual = sum((c[2] + c[3] + c[4]) / 3 * c[5] for c in sesi) / sum(c[5] for c in sesi)
+        self.assertEqual(len(sesi), 28)  # 07:00-13:45 WIB
+        self.assertAlmostEqual(r["vwap"], manual, places=6)
+        self.assertGreater(r["vwap_jarak_atr"], 2.0)  # harga ~2,1 ATR di atas VWAP
+
+    def test_dos_1345_ditolak_karena_resistance_menempel_aturan_room_4_persen(self):
+        # Mengunci perilaku aturan ROOM_MIN_PCT = 4%: resistance 3-sentuhan 0,17246667 hanya +0,04%
+        # di atas harga. BUKAN tes LOLOS; ubah tes ini bila aturan room diubah.
+        _, r = _dos_result()
+        self.assertEqual(scan.ROOM_MIN_PCT, 4.0)
+        self.assertAlmostEqual(r["nearest_resistance"], 0.17246667, places=6)
+        self.assertLess(r["room_pct"], 0.1)
+        self.assertEqual(r["verdict"], "DITOLAK")
+        self.assertIn("ruang ke resistance", r["alasan"])
+
+    def test_now_ms_diteruskan_ke_reader(self):
+        rows = json.loads(_DOS_FILE.read_text(encoding="utf-8"))
+        # dengan now_ms=14:01 WIB candle buka 14:00 berjalan dan dibuang; tanpa now_ms reader
+        # memakai jam dinding (jauh setelah data) dan menganggapnya sudah tutup.
+        sama = scan.call_reader(self.reader, rows, now_ms=DOS_NOW)
+        self.assertEqual(sama["last_closed_wib"], "2026-11-12 13:45")
+        self.assertTrue(any("masih berjalan" in w for w in sama["warnings"]))
+
+
+class TestCallReaderKompatibel(unittest.TestCase):
+    def test_now_ms_hanya_diteruskan_bila_read_menerimanya(self):
+        seen = {}
+
+        def read_baru(candles, now_ms=None):
+            seen["now_ms"] = now_ms
+            return {"ok": True}
+
+        def read_lama(candles):
+            seen["lama"] = True
+            return {"ok": True}
+
+        rows = [[1, 1, 1, 1, 1, 1]]
+        scan.call_reader(types.SimpleNamespace(read=read_baru), rows, now_ms=123)
+        scan.call_reader(types.SimpleNamespace(read=read_lama), rows, now_ms=123)
+        scan.call_reader(types.SimpleNamespace(read=read_baru), rows)
+        self.assertEqual(seen, {"now_ms": None, "lama": True})
+
+
 if __name__ == "__main__":
     unittest.main()

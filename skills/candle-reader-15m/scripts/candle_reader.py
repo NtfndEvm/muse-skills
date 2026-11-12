@@ -141,6 +141,41 @@ def vol_label(ratio: float | None, p: dict[str, Any]) -> str:
     return "TINGGI" if ratio >= p["vol_high"] else "RENDAH" if ratio < p["vol_low"] else "NORMAL"
 
 
+# ------------------------------------------------------------------- VWAP
+VWAP_MIN_CANDLES = 10   # sesi dengan candle tutup lebih sedikit dari ini -> VWAP belum stabil
+
+
+def _utc_date(ts_ms: int):
+    return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).date()
+
+
+def session_vwap(candles: list[dict[str, float]], atr_value: float | None = None) -> dict[str, Any]:
+    """VWAP sesi harian, anchor 00:00 UTC. `candles` = candle TUTUP saja (urut naik).
+
+    Sesi = semua candle yang tanggal UTC waktu-bukanya sama dengan candle tutup terakhir;
+    VWAP direset tiap 00:00 UTC (jangan hitung dari seluruh 100 candle tanpa reset).
+    typical price = (high + low + close) / 3, bobot = volume base.
+    Bila sesi < VWAP_MIN_CANDLES candle (atau volume sesi 0): vwap = None dan
+    label = "VWAP BELUM STABIL".
+    """
+    out: dict[str, Any] = {"vwap": None, "label": "VWAP BELUM STABIL", "n_candle": 0,
+                           "jarak_atr": None, "di_atas": None, "di_bawah": None}
+    if not candles:
+        return out
+    day = _utc_date(candles[-1]["ts"])
+    sesi = [c for c in candles if _utc_date(c["ts"]) == day]
+    out["n_candle"] = len(sesi)
+    vol = sum(c["v"] for c in sesi)
+    if len(sesi) < VWAP_MIN_CANDLES or vol <= 0:
+        return out
+    vw = sum((c["h"] + c["l"] + c["c"]) / 3 * c["v"] for c in sesi) / vol
+    last_close = candles[-1]["c"]
+    out.update(vwap=vw, label=None, di_atas=last_close > vw, di_bawah=last_close < vw)
+    if atr_value:
+        out["jarak_atr"] = (last_close - vw) / atr_value
+    return out
+
+
 # -------------------------------------------------------------- pembacaan
 def drop_forming(candles: list[dict[str, float]], interval_min: int, now_ms: int | None) -> tuple[list[dict[str, float]], bool]:
     now_ms = int(time.time() * 1000) if now_ms is None else now_ms
@@ -178,6 +213,7 @@ def read(candles: list[dict[str, float]], params: dict[str, Any] | None = None,
     if not a or a <= 0:
         return {"ok": False, "reason": "ATR tidak valid (harga datar/data buruk)", "warnings": warnings}
     tol, buf = p["tol_atr"] * a, p["buffer_atr"] * a
+    vw = session_vwap(candles, a)
 
     # volume: rasio vs rata-rata N candle sebelum candle terakhir
     base = [c["v"] for c in candles[-p["vol_n"] - 1:-1]]
@@ -289,6 +325,10 @@ def read(candles: list[dict[str, float]], params: dict[str, Any] | None = None,
         "ok": True, "warnings": warnings,
         "last_closed_wib": datetime.fromtimestamp(last["ts"] / 1000, WIB).strftime("%Y-%m-%d %H:%M"),
         "close": close, "atr": a, "atr_pct": round(a / close * 100, 3),
+        "vwap": round(vw["vwap"], 8) if vw["vwap"] is not None else None,
+        "vwap_jarak_atr": round(vw["jarak_atr"], 3) if vw["jarak_atr"] is not None else None,
+        "di_atas_vwap": vw["di_atas"], "di_bawah_vwap": vw["di_bawah"],
+        "vwap_label": vw["label"], "vwap_n_candle": vw["n_candle"],
         "trend": {"state": trend, "ema_fast": ef, "ema_slow": es, "slope_atr_5c": round(slope, 3),
                   "close_vs_ema_fast": "di atas" if close > ef else "di bawah"},
         "volume": {"ratio": round(vratio, 2) if vratio is not None else None, "label": vol_label(vratio, p)},
@@ -306,6 +346,11 @@ def to_text(r: dict[str, Any]) -> str:
     L = [f"Candle tutup terakhir: {r['last_closed_wib']} WIB · close {r['close']} · ATR {r['atr']:.6g} ({r['atr_pct']}%)"]
     t = r["trend"]
     L.append(f"Trend: {t['state']} (close {t['close_vs_ema_fast']} EMA cepat, slope {t['slope_atr_5c']} ATR/5c)")
+    if r.get("vwap") is not None:
+        L.append(f"VWAP sesi (00:00 UTC): {r['vwap']:.6g} · harga {'di atas' if r['di_atas_vwap'] else 'di bawah'} "
+                 f"VWAP ({r['vwap_jarak_atr']:+} ATR, {r['vwap_n_candle']} candle sesi)")
+    else:
+        L.append(f"VWAP sesi (00:00 UTC): {r.get('vwap_label') or 'tidak tersedia'} ({r.get('vwap_n_candle', 0)} candle sesi)")
     L.append(f"Volume candle terakhir: {r['volume']['label']} (rasio {r['volume']['ratio']})")
     lc = r["last_candle"]
     L.append(f"Bentuk: body {lc['body_ratio']}, close_pos {lc['close_pos']}, sumbu atas {lc['upper_wick']}, "
