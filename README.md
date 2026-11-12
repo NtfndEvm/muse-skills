@@ -1,11 +1,12 @@
 # muse-skills
 
 Kumpulan skill yang dipakai Muse untuk membantu user: riset dan farming
-airdrop/testnet/free-mint, serta scalping spot di Bitget.
+airdrop, testnet, dan free-mint, serta trading spot dengan pendekatan
+yang disiplin dan terukur.
 
 Setiap skill berisi `SKILL.md` (playbook) dan `skill.yaml` (metadata).
-Skill tidak mengeksekusi transaksi apa pun — user yang mengeksekusi sendiri,
-dan semua aturan keamanan on-chain berlaku.
+Skill tidak mengeksekusi transaksi apa pun — user yang mengeksekusi
+sendiri, dan semua aturan keamanan on-chain selalu berlaku.
 
 ## Isi repo
 
