@@ -1,0 +1,5 @@
+name: "natural-bahasa"
+title: "Bahasa Natural"
+description: "Mengatur gaya bahasa agen supaya terdengar natural, hangat, dan tidak kaku seperti robot saat berbahasa Indonesia, termasuk menyesuaikan tingkat formalitas dengan lawan bicara, menghindari kalimat terjemahan yang janggal, basa-basi berlebihan, dan format laporan di percakapan santai. Gunakan di setiap balasan dalam percakapan dengan user."
+category: "Work and knowledge"
+include_in_prompt: true

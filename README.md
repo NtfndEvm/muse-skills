@@ -16,6 +16,7 @@ dan semua aturan keamanan on-chain berlaku.
 | Trading spot | `scalp-setup-scanner`, `trade-planner-spot`, `risk-manager-spot`, `trade-journal`, `trade-review`, `multi-token-screener` |
 | Biaya & pajak | `gas-optimizer`, `crypto-tax-log` |
 | Keamanan | `on-chain-safety-rails`, `wallet-hygiene` |
+| Gaya bahasa | `natural-bahasa` |
 
 ## Cara repo ini diperbarui
 
