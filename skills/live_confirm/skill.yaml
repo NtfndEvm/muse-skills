@@ -1,0 +1,22 @@
+name: live_confirm
+title: Live Confirm
+description: Memeriksa token spot secara live sebelum entry atau saat memantau posisi lewat momentum 5m, kedalaman order book, dan delta volume dari data publik Bitget, lalu melaporkan sentuhan level live sebagai belum terkonfirmasi.
+category: Work and knowledge
+include_in_prompt: true
+skill_improvement:
+  managed: true
+  status: active
+  evidence_handles:
+  - chunk_handoff (handoff from chunks 1..2, this run)
+  - cron run 22dc832d-7217-48bd-924a-021dbdd55a15 (pantau-posisi-cyber)
+  - /home/hatch/workspace/custom-skills/live_confirm/scripts/README.md
+  - /home/hatch/workspace/custom-skills/live_confirm/scripts/README-live_check.md
+  measurement:
+    proxy_metric_id: objective_success_rate
+    success_criterion: Within 30 days, live-confirm is used in at least one live entry or position-monitoring check and no new case is recorded of a live move through a watched level going unreported because only closed 15m candles were read. If no trading entry or monitoring session occurs in the window, the result is inconclusive rather than a failure.
+    window_days: 30
+  needs_review: false
+  rationale: 'Two evidenced failures share one cause: only closed 15m candles were read, so the running candle was discarded. MAGMA rose about 15 percent in one candle through the watched $0.2807 level and the move was missed, and the MAGMA support break at 18:45 on 12 Nov 2026 was only reported at 19:14, after which the user said to report a trigger immediately and label it unconfirmed. The fix was already built and tested: live_check.py with reader_5m, orderbook and delta, 37 tests passing, live-verified on MAGMA on 12 Nov 2026, with explicit rules that a live breach is unconfirmed and an out-of-range level is TIDAK TERUKUR rather than TIPIS. But the toolset has no SKILL.md: ~/workspace/custom-skills/live-confirm/ holds only scripts/, and muse.skill_search for live price and live-confirm returns only entry-assistant, candle-reader-15m and trade-planner-spot, so the method is undiscoverable in later sessions. A new managed skill makes it discoverable and complements candle-reader-15m, which is closed-candle only by design, instead of duplicating it. The related entry-assistant and candle-reader-15m files carry no skill_improvement managed metadata, so this loop cannot amend them; the missing piece is therefore proposed as a new managed skill. Deterministic candidates about repeated handoff suppression and the memory objective''s recurring failures were rejected: they concern objective-loop prompts and policy, which this loop does not change, and the packet gives no skill-shaped mechanism for them.'
+  review_after: 2026-12-13T04:33:24.744087+00:00
+  reviewed_at: 2026-11-13T04:33:24.744087+00:00
+  run_id: sirun_b7913aaf79644085863b93f085c8230c
