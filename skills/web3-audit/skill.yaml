@@ -1,5 +1,0 @@
-name: "web3-audit"
-title: "Web3 Audit"
-description: "Smart contract security audit for EVM/Solidity DeFi — 10 bug classes with real paid examples and grep patterns, pre-dive kill signals, and a Foundry PoC template. Use when auditing a Solidity target or generating hypotheses for a bug bounty."
-category: "Work and knowledge"
-include_in_prompt: true
