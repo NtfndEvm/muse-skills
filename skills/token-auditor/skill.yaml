@@ -1,5 +1,0 @@
-name: "token-auditor"
-title: "Token Auditor"
-description: "Fast EVM token security audit — rug pull detection for ERC20/Solidity token contracts: hidden mint, honeypot, fee manipulation, LP drain, bonding curve, fake renounce, sandwich/MEV amplification, plus a deterministic regex scanner (scripts/token_scanner.py, stdlib only, no network). Use when checking whether a token contract is safe to interact with, before a mint/claim, or for a pre-investment rug check."
-category: "Work and knowledge"
-include_in_prompt: true
