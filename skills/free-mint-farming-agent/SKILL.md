@@ -1,4 +1,11 @@
+---
+name: "free-mint-farming-agent"
+description: "Find and verify free NFT and token mints on BSC for Binance Agent ID holders, using the gate chain in the saved playbook, only when the user asks for a run."
+---
+
 # Free-Mint Farming Agent
+
+last_verified: 2026-11-17 — Sourcify v2 (200, kontrak WBNB di BSC) dan feed hashtag Binance Square #FreeMint (halaman terbuka via browser) masih hidup; cek ulang: skills/_shared/check_external.py
 
 ## Status and scope
 
@@ -12,7 +19,7 @@
 
 - Ask the user for explicit confirmation before any mainnet action, and before any signing or broadcast, even for a value-0 mint.
 
-- Read the full original playbook in references/agentic-zeroconfig.md before you run a manual check, and use its section numbers when you refer to a rule.
+- Read the summary of the original playbook in references/agentic-zeroconfig.md before you run a manual check, and use its section numbers when you refer to a rule. (Own-words summary + source link only — the upstream repo has no license, so the full text is not copied here; see NOTICE.)
 
 ## Find candidates
 
@@ -94,4 +101,4 @@
 
 - Use `muse.connector_search` to find other connectors and `muse.skill_search` to find related skills.
 
-- If nothing here fits, look on the web for a maintained API or MCP server and set it up with [Custom Connectors and MCPs](/opt/muse/skills/custom-connector-setup/SKILL.md), or build a custom connector.
+- If nothing here fits, look on the web for a maintained API or MCP server and set it up with the custom-connector-setup skill (part of the Muse installation, not in this repo), or build a custom connector.

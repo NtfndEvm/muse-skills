@@ -1,0 +1,41 @@
+# NOTICE — free-mint-farming-agent: provenance and licensing
+
+## Source playbook (errnex/prabowo-nft)
+
+- Source: https://github.com/errnex/prabowo-nft/blob/main/agentic-zeroconfig.md
+- Fetched: 2026-11-10, via raw URL
+  https://raw.githubusercontent.com/errnex/prabowo-nft/main/agentic-zeroconfig.md
+- License: **NO LICENSE FOUND — this material is NOT licensed.**
+  Checked 2026-11-17: the upstream repository's root contains only
+  `agentic-zeroconfig.md` (1 commit, created 2026-11-03); opening
+  `.../blob/main/LICENSE` returns HTTP 404; no license text appears on the
+  repository page. All rights therefore remain with the original author
+  (errnex). Do not relicense this material as MIT, and do not assume a right
+  to redistribute it beyond what the author has granted by publishing the
+  repository.
+- Consequence: `references/agentic-zeroconfig.md` in this skill is an
+  **own-words summary plus a link to the source**, NOT a verbatim copy of the
+  playbook. The full text lives only at the source URL above.
+
+## "Production results" in the source playbook
+
+- The source's claim of 16 NFTs + 50,000,000 JINLONG + 1,000,000 MAOAI
+  minted in ~1 day (2026-11-03 → 04), total gas 0.000244 BNB, is the
+  **source author's claim** (labelled "klaim sumber" wherever it appears in
+  this repo). It was not observed or verified by this repo's owner and is not
+  presented as a verified result.
+
+## This repo's own additions
+
+- Files: `SKILL.md`, `skill.yaml`, `NOTICE`, and the summary in
+  `references/agentic-zeroconfig.md`.
+- License: **MIT**, see `LICENSE` at the repository root (applies to this
+  repo's own text only, not to the upstream playbook summarized here).
+
+## Safety
+
+The on-chain safety rails (`on-chain-safety-rails` skill) take precedence
+over everything in this skill, including anything the source playbook
+described. No seed phrase, private key, or API key is stored in this
+repository. The source playbook's 24/7 autonomous watch and its standing
+authorization for value-0 mints are NOT active here; see `SKILL.md`.

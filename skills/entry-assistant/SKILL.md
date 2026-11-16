@@ -103,6 +103,9 @@ Ringkasan satu baris: "Semua aturan terpenuhi" atau "N aturan terlanggar: ...".
 - **Tunggu/batal**: catat sebagai rencana BATAL/KEDALUWARSA bila relevan; tidak perlu komentar tambahan.
 - Setelah trade ditutup, `trade-review` membandingkan rencana vs eksekusi vs hasil, termasuk apakah pelanggaran sadar itu berkorelasi dengan hasil buruk.
 
+## Tool: pre_entry_check.py
+Sebelum user masuk dengan entry/stop/target aktual, jalankan `scripts/pre_entry_check.py` (stdlib saja) — skrip ini menegakkan aturan disiplin yang sudah ada, bukan aturan baru: konfirmasi ada/tidak, volume spike (≥ 1,5x), ruang ke resistance (≥ 4%), extension dari VWAP (> 3 ATR = lampu merah), target ≥ target profit user 5%, budget cukup untuk stop aktual dan untuk stop 1x ATR, serta R:R bersih (≥ 1,5) yang dihitung ulang dari entry aktual dengan rumus `target = entry + 2 × jarak stop` yang ditulis di output. Skrip hanya menandai pelanggaran — bukan veto; exit code tetap 0 bila input valid, keputusan tetap di user. Contoh: `python scripts/pre_entry_check.py --pair UAI --entry 0.04072 --stop 0.0399 --target 0.04236 --confirmed --volume-ratio 2.1 --resistance 0.045 --vwap 0.040 --atr 0.0004` → 1 pelanggaran dari 8 cek (target +4,03% < target profit 5%, R:R bersih 1,61 lolos). Cek yang datanya tidak diisi dilaporkan `TIDAK_ADA_DATA`, bukan lolos diam-diam. Tes sintetis: `python -m unittest test_pre_entry_check` (16 tes).
+
 ## Nada
 Natural dan tenang, seperti rekan trading yang jujur. Tidak mendorong masuk, tidak menakut-nakuti. Ikuti gaya bahasa user (lihat `natural-bahasa`). Peringatan singkat dan spesifik.
 
