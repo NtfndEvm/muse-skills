@@ -1,0 +1,5 @@
+name: live-confirm
+title: Live Confirm
+description: Memeriksa token spot secara live sebelum entry atau saat memantau posisi lewat momentum 5m, kedalaman order book, dan delta volume dari data publik Bitget, lalu melaporkan sentuhan level live sebagai belum terkonfirmasi.
+category: Work and knowledge
+include_in_prompt: true

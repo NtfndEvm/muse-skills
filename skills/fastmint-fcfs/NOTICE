@@ -1,0 +1,71 @@
+# NOTICE — fastmint-fcfs: provenance and licensing
+
+This skill mixes three kinds of code. They are licensed differently.
+
+## 1. Upstream code (the bulk of this skill)
+
+- Source: https://github.com/setyamickala/fastmint-fcfs-agentic
+- Commit used: 55e744d (55e744d5a7fb329f831697d4f775edeeb5eec589)
+- Files: `fire.js`, `lib.js`, `recon.js`, `bench.js`, `fastmint.sh`,
+  `SKILL.md`, `README.md`, `README.id.md` (as adapted — see below).
+- License: **NO LICENSE FOUND — this part is NOT licensed under MIT.**
+  Checked 2026-11-17: the upstream repository has no `LICENSE` file
+  (its root file list is `.env`, `.gitignore`, `README.id.md`,
+  `README.md`, `SKILL.md`, `bench.js`, `ethers.umd.min.js`,
+  `fastmint.sh`, `fire.js`, `lib.js`, `recon.js`, `runs/`; opening
+  `.../blob/main/LICENSE` returns HTTP 404; the word "license" does not
+  appear anywhere on the repository page). All rights therefore remain
+  with the original author (setyamickala). Do not relicense this part
+  as MIT, and do not assume a right to redistribute it beyond what the
+  author has granted by publishing the repository.
+
+## 2. Bundled ethers.js
+
+- File: `ethers.umd.min.js`
+- Version: **6.13.4** (verified: `require(...).version === '6.13.4'`,
+  and the bundle header contains `const version="6.13.4"`)
+- License: **MIT** (ethers.js, https://github.com/ethers-io/ethers.js)
+- SHA-256:
+  `fd66c04651929c6a37806a37e8217e6b6aac07c7e816ad478f52690b7429bc61`
+- No `package.json` / lockfile is shipped; this hash is the integrity
+  record for the vendored bundle. If the file is ever replaced, update
+  the hash here (and in the repo README).
+
+### Why 6.13.4 and not newer
+
+Checked 2026-11-17 via https://registry.npmjs.org/ethers/latest:
+the latest ethers 6.x is **6.17.0** (published 2026-06-17).
+Decision: **stay on 6.13.4, do not update.** Reasons:
+
+- 6.13.4 is the version verified working end to end, including one
+  real live mint (Pocket Moons, 2026-11-11, trigger-to-receipt 2.0s).
+- The 6.14.0–6.17.0 changelog entries are feature/provider work
+  (request-rate throttle, ENSv2/cointype fixes, EIP-7594 blob-proof
+  helpers, non-canonical-S signature handling, Etherscan provider
+  fixes). None of them is a security fix for the surface this skill
+  uses (ABI encoding/decoding, `parseEther`/`formatEther`,
+  `keccak256`/`id`, `Interface`, `getAddress`).
+- Replacing the vendored 505 KB bundle without a live mint to
+  re-verify it would trade a verified artifact for an unverified one.
+  Revisit the update only together with a live dry-run + live mint
+  re-verification, and record the new SHA-256 here when that happens.
+
+## 3. This repo's own additions
+
+- Files: `NOTICE`, `NOTES.md`, `test/` (tests), and the edits to
+  `SKILL.md` described in `NOTES.md` (review block moved out,
+  machine-specific path removed, Linux notes added).
+- License: **MIT**, see `LICENSE` at the repository root.
+- Two deliberate deviations from upstream, recorded 2026-11-11 and
+  kept: (1) the upstream author's shipped `.env` (containing their
+  QuikNode endpoint + key) was NOT copied — see `.env.example`,
+  supply your own RPC or use the public pool; (2) `SKILL_DIR` is the
+  folder holding `SKILL.md`, wherever the skill is installed
+  (upstream used a macOS path).
+
+## Safety
+
+The on-chain safety rails (`on-chain-safety-rails` skill) take
+precedence over everything in this skill. No seed phrase, private key,
+or API key is stored in this repository; premium RPC endpoints belong
+in `.env` (git-ignored, mode 600), never in code, docs, or logs.

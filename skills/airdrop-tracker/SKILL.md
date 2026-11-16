@@ -1,3 +1,8 @@
+---
+name: "airdrop-tracker"
+description: "Manage and track airdrop, testnet, quest, points, and free-mint activity in a table or spreadsheet, including task status, gas costs, deadlines, claim results, and ROI estimates, whenever the user asks for notes, a tracker, a project list, a cost recap, or a deadline reminder."
+---
+
 # Airdrop Tracker
 
 Menjaga semua aktivitas airdrop tetap terorganisir: apa yang sedang digarap, berapa biaya terpakai, kapan deadline, dan apakah hasilnya sepadan.
@@ -95,6 +100,10 @@ Catatan: reward airdrop bersifat spekulatif dan tidak dijamin.
 - **Spreadsheet (.xlsx)**: jika user minta file atau tabel yang akan dipakai berulang, buat berkas dengan empat tab di atas; gunakan formula (jumlah biaya, ROI) agar otomatis terhitung, dan baca skill `xlsx` terlebih dahulu bila tersedia.
 - **Tabel di chat**: untuk update cepat atau ringkasan, gunakan tabel Markdown singkat.
 - Gunakan bahasa user (default Bahasa Indonesia), angka dalam USD kecuali user menetapkan mata uang lain.
+
+## Skrip: scripts/airdrop.py
+
+Tracker ini punya sumber data tetap: `scripts/airdrop.py` (Python stdlib saja) menyimpan semua proyek, log, dan klaim di satu berkas JSON `airdrop-state.json` — lokasinya lewat `--state`, env var `AIRDROP_STATE`, atau default `$MUSE_WORKSPACE/airdrop-state.json` (env `MUSE_WORKSPACE` default `~/workspace`), mengikuti pola `trade.py` di `trade-journal`. Perintahnya: `add` (tambah proyek, ID otomatis P001, P002, …), `log` (catat aktivitas dan menambah total biaya proyek; `--token/--amount/--price` mencatat klaim sekaligus), `status` (ringkasan + proyek aktif tanpa tugas berikutnya), `deadlines` (terurut, penanda 🔴 ≤3 hari / 🟠 ≤7 hari / 🟡 ≤14 hari), `roi` (realisasi dan estimasi terpisah mengikuti rumus di atas), dan `export-xlsx` (empat tab sesuai struktur di atas; butuh `openpyxl` — bila tidak tersedia, diekspor sebagai empat berkas CSV dengan pesan yang jelas). Hanya alamat publik/label wallet yang boleh disimpan; input yang cocok pola kunci/seed (heks 64 karakter, 12/24 kata mirip mnemonic, atau frasa "mnemonic"/"seed phrase"/"private key") ditolak dengan pesan jelas dan perintah gagal — pengecualian hanya `--tx`, yang menerima hash transaksi karena itu data publik on-chain. Tes: `python3 -m unittest test_airdrop -v` dari folder `scripts/`.
 
 ## Catatan Pajak
 

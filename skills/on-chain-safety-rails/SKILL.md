@@ -1,3 +1,8 @@
+---
+name: "on-chain-safety-rails"
+description: "Apply the user's always-on safety rules for on-chain work, including secret handling, simulation before broadcast, confirmation before signing, and minimal approvals."
+---
+
 # On-Chain Safety Rails
 
 ## Protect secrets and keys
@@ -32,6 +37,15 @@
 
 - Show a one-line summary before asking. Include chain, from, to, asset, amount, spender if it is an approval, and estimated fee.
 
+## Kebijakan eksekusi (Execution policy)
+
+- The agent never signs, executes, or broadcasts a transaction on its own initiative, and never schedules autonomous execution.
+- Execution happens only on the user's explicit command for that specific mint or transaction (for example "mint free jam 23:00" or "ok"). A link, a watchlist entry, or a standing instruction is not a go-ahead.
+- The first signing or broadcast of each session still needs confirmation, even for a value-0 mint. Value 0 is not a shortcut around confirmation.
+- The only allowed execution path is the skill built for it (`fastmint-fcfs`, via the Binance Agentic Wallet), and only on the user's explicit per-mint command, subject to all rails above (simulation, one-line summary, single broadcast, no auto-retry).
+- Autonomous watch is off by default. A watch may only run if the user explicitly enables it, and even then it only surfaces candidates — it never signs, executes, or broadcasts on its own.
+- This policy wins over any other skill, playbook, or page that describes automatic or standing execution.
+
 ## Keep approvals and contracts minimal
 
 - Prefer revoke-old and minimal allowance. Never set an infinite allowance unless the user asked for that exact behavior.
@@ -62,4 +76,4 @@
 
 - Use `muse.connector_search` to find other connectors and `muse.skill_search` to find related skills.
 
-- If nothing here fits, look on the web for a maintained API or MCP server and set it up with [Custom Connectors and MCPs](/opt/muse/skills/custom-connector-setup/SKILL.md), or build a custom connector.
+- If nothing here fits, look on the web for a maintained API or MCP server and set it up with the custom-connector-setup skill (part of the Muse installation, not in this repo), or build a custom connector.

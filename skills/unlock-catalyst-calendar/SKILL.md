@@ -5,6 +5,8 @@ description: Memantau jadwal token unlock, listing/delisting, snapshot dan klaim
 
 # Unlock & Catalyst Calendar
 
+last_verified: 2026-11-17 — Tokenomist (200), CryptoRank (403, host hidup), DefiLlama Unlocks (403, host hidup); cek ulang: skills/_shared/check_external.py
+
 Mirip `airdrop-calendar-aggregator`, tetapi untuk **harga dan risiko**: kapan pasokan token bertambah atau ada kejadian yang bisa menggerakkan harga atau likuiditas token yang kamu pegang atau pantau.
 
 ## Aturan Mutlak

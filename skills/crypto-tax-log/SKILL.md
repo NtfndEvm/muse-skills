@@ -1,3 +1,8 @@
+---
+name: "crypto-tax-log"
+description: "Record and organize crypto transaction data for tax reporting, including cost basis, realized gains and losses, and annual recaps, whenever the user mentions crypto tax, reporting, capital gains, cost basis, or recording a token sale."
+---
+
 # Crypto Tax Log
 
 Membantu user mencatat aktivitas dari awal sehingga pelaporan pajak tidak menjadi mimpi buruk di akhir tahun. Skill ini adalah **alat pencatatan dan perhitungan**, bukan penasihat pajak atau hukum.

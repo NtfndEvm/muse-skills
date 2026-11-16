@@ -1,4 +1,11 @@
+---
+name: "wallet-hygiene"
+description: "Audit and maintain crypto wallet security, including open approvals, spam tokens, burner vs main wallet structure, and routine checklists, whenever the user asks about wallet safety, approvals, revoke, or a suspicious link."
+---
+
 # Wallet Hygiene
+
+last_verified: 2026-11-17 — Revoke.cash (200) dan Tenderly (429, host hidup); cek ulang: skills/_shared/check_external.py
 
 Membantu user menjaga wallet tetap bersih dan aman, terutama yang aktif di airdrop, testnet, dan free mint, karena aktivitas itu berarti sering connect ke situs baru.
 

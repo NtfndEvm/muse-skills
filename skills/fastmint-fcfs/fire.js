@@ -16,6 +16,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Gas sanity cap per mint, from the free-mint gate chain
+// (free-mint-farming-agent). A preview estimating more gas refuses.
+const MAX_GAS = 400000;
+
 const HELP = `usage: node fire.js --to 0xC (--data 0x... | --sig "fn(type,..)" --args '[..]') [--start <t>] [options]
   --value <BNB>        BNB to send (decimal, default 0). Paid mint needs an explicit amount.
   --maxValue <BNB>     safety cap; required when --value > 0; refuses if value > cap
@@ -34,8 +38,10 @@ const HELP = `usage: node fire.js --to 0xC (--data 0x... | --sig "fn(type,..)" -
   --once               single preview, single execute, no retries
   --dry                everything incl. preview, stop before execute     --noPreview  with --dry: stop before preview
   --noEager            do not trigger on head ts >= start                --noWs       no WebSocket heads
-  --gasLimit <n>       pass to preview (cap, only if the user asked)
+  --gasLimit <n>       pass to preview (cap, only if the user asked; refused above 400000)
   --expectNft <n>      execute only if the preview shows exactly n NFTs (Erc721/Erc1155 from --to) arriving in the wallet
+  --allowUnverified    allow an UNVERIFIED contract (no Sourcify ABI). Only on the user's explicit
+                       "lanjut tanpa verifikasi" for this contract; without it fire.js refuses unverified targets.
   --gateSim            rehearsal aid: ignore eth_call OK before --start (mimics a NotStarted gate on an always-OK call)
   --from 0x..          wallet (default: baw wallet address on chain 56)
   --abi 0x..           extra address whose Sourcify ABI is used for error decoding (default --to)
@@ -55,15 +61,27 @@ for (let i = 0; i < a.length; i++) {
     case '--once': o.once = true; break; case '--dry': o.dry = true; break; case '--noPreview': o.noPreview = true; break;
     case '--noEager': o.noEager = true; break; case '--noWs': o.noWs = true; break; case '--gasLimit': o.gasLimit = +nx(); break;
     case '--expectNft': o.expectNft = +nx(); break; case '--gateSim': o.gateSim = true; break;
+    case '--allowUnverified': o.allowUnverified = true; break;
     case '--from': o.from = nx(); break; case '--abi': o.abi = nx(); break; case '--label': o.label = nx(); break;
     case '--waitOn': o.waitOn = new RegExp(nx(), 'i'); break; case '--fatalOn': o.fatalOn = new RegExp(nx(), 'i'); break;
     case '-h': case '--help': console.log(HELP); process.exit(0);
     default: console.error('unknown arg ' + k + '\n' + HELP); process.exit(2);
   }
 }
+// State used by printTimeline()/die() is declared here, not in the
+// ---- state ---- section below: die() runs during argument validation
+// (before the state section is reached), and reading `let`/`const`
+// state from printTimeline() before its declaration throws a
+// ReferenceError (TDZ) instead of exiting with the intended code.
+let startUnix = null, startMs = 0, deadline = 0;
+const TL = {}; // timeline marks
 const die = (m, code = 1) => { log('STOP ' + m); printTimeline(); process.exit(code); };
 if (!o.to || !ethers.isAddress(o.to)) die('--to missing/invalid', 2);
 o.to = ethers.getAddress(o.to);
+// Gas cap (brief item 17): --gasLimit above the ~400000 sanity cap
+// refuses. Validated here, not in the arg loop above, because die()
+// is only defined at this point (TDZ before it).
+if (o.gasLimit != null && o.gasLimit > MAX_GAS) die(`--gasLimit ${o.gasLimit} exceeds the ~${MAX_GAS} gas sanity cap (free-mint gate chain)`, 2);
 
 // ---- calldata (static or dynamic) ----
 let fnFrag = null, iface = null, rawArgs = null, dynamic = false;
@@ -131,13 +149,11 @@ const save = (name, obj) => { try { fs.writeFileSync(path.join(RUNS, `${stamp}_$
 // ---- state ----
 let decodeIface = null;
 let head = { number: 0, ts: 0, at: 0 };
-let startUnix = null, startMs = 0, deadline = 0;
 let ctx = { wallet: null, agentId: null };
 let executing = false, done = false;
 let previewsSent = 0, previewsInflight = 0, lastPreviewAt = 0;
 let lastSimRevert = null; // { name, cls, at }
 let simRounds = 0, simInflight = 0, simOkSeen = false;
-const TL = {}; // timeline marks
 const mark = (k, t = L.now()) => { if (TL[k] == null) TL[k] = t; };
 function printTimeline() {
   if (!startMs || !Object.keys(TL).length) return;
@@ -245,6 +261,21 @@ function nativeOutflowWei(sim) {
   }
   return max;
 }
+function previewGasEstimate(sim, d) {
+  // Binance preview gas, when present, lives under several possible keys.
+  // Returns a Number, or null when the preview carries no gas estimate
+  // (then the gate cannot judge it and does not block on gas).
+  for (const src of [sim, d]) {
+    if (!src || typeof src !== 'object') continue;
+    for (const k of ['estimatedGas', 'gasLimit', 'gasUsed', 'gas']) {
+      const v = src[k];
+      if (v == null) continue;
+      const n = typeof v === 'number' ? v : (/^\d+$/.test(String(v)) ? Number(v) : NaN);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+  }
+  return null;
+}
 function checkPreview(r) {
   const j = r.json || {};
   if (!r.ok || !j.data) {
@@ -267,6 +298,9 @@ function checkPreview(r) {
     const txt = L.safeJson(sim).slice(0, 600);
     return { verdict: classifyText(txt), why: `preview simulationCode ${sim.simulationCode} ${txt}` };
   }
+  // Gas sanity (free-mint gate chain): estimated gas above ~400000 refuses.
+  const gasEst = previewGasEstimate(sim, d);
+  if (gasEst != null && gasEst > MAX_GAS) return { verdict: 'fatal', why: `preview gas estimate ${gasEst} > ~${MAX_GAS} cap (free-mint gate chain) — not executing` };
   if ((sim.allowanceChanges || []).length || (sim.authorityChanges || []).length)
     return { verdict: 'fatal', why: 'preview shows allowance/authority changes — not executing ' + L.safeJson({ a: sim.allowanceChanges, au: sim.authorityChanges }) };
   const risks = d.risks || {};
@@ -293,8 +327,19 @@ async function execute(ck, data, n) {
   if (executing || done) { log(`preview #${n} OK but another execute is already in flight — ignored`); return; }
   executing = true;
   if (o.dry) { log(`DRY: stop before execute. Would run: baw contract-call execute --requestId ${ck.requestId} --json`); done = true; printTimeline(); process.exit(0); }
-  if (fs.existsSync(lockFile)) die('lock appeared — another run executed this call');
-  fs.writeFileSync(lockFile, L.safeJson({ t: L.wib(), to: o.to, data, value: valueWei, requestId: ck.requestId, state: 'executing' }));
+  // Claim the lock ATOMICALLY (open 'wx' fails if the file already
+  // exists). A plain existsSync-then-write has a race: two parallel
+  // processes can both pass the check and both execute. The 'wx' open
+  // is the single point that decides which process owns this call.
+  let lockFd;
+  try {
+    lockFd = fs.openSync(lockFile, 'wx');
+    fs.writeFileSync(lockFd, L.safeJson({ t: L.wib(), to: o.to, data, value: valueWei, requestId: ck.requestId, state: 'executing' }));
+    fs.closeSync(lockFd);
+  } catch (e) {
+    if (e.code === 'EEXIST') die('lock appeared — another run executed this call');
+    throw e;
+  }
   mark('executeSent');
   const ex = await L.baw(['contract-call', 'execute', '--requestId', ck.requestId], 90000);
   save('exec', ex.stdout || ex.stderr);
@@ -361,6 +406,15 @@ async function receipt(hash) {
   if (balWei < valueWei + ethers.parseEther('0.0003')) die('balance too low for value + gas');
   if (agent && agent.tokenId != null) ctx.agentId = agent.tokenId;
   if (ab) { try { decodeIface = new ethers.Interface(ab.abi); log(`sourcify ABI loaded (${ab.match}), ${decodeIface.fragments.filter(f => f.type === 'error').length} errors`); } catch {} }
+  // Verified-contract standard (brief item 15): an unverified contract
+  // stops here unless the user explicitly said "lanjut tanpa verifikasi"
+  // for this contract, carried as --allowUnverified.
+  if (!ab && !o.allowUnverified) die(`contract ${o.to} is UNVERIFIED on Sourcify (no verified ABI) — refusing. Pass --allowUnverified only if the user explicitly said "lanjut tanpa verifikasi" for this contract.`);
+  if (!ab) log('WARN UNVERIFIED contract — proceeding only because --allowUnverified was passed (user said "lanjut tanpa verifikasi" for this contract)');
+  // --expectNft (brief item 17): mandatory when the user states how many
+  // NFTs they should get; without it there is no result verification.
+  if (o.expectNft == null) log('WARN no --expectNft: tidak ada verifikasi hasil — the preview cannot confirm how many NFTs arrive. Pass --expectNft <n> whenever the expected count is known.');
+  else log(`--expectNft ${o.expectNft}: execute only if exactly that many NFTs arrive`);
   const data0 = await buildData(ctx);
   if (decodeIface) { try { const f = decodeIface.getFunction(data0.slice(0, 10)); if (f) log(`call = ${f.format('sighash')}${f.payable ? ' payable' : ''} args ${L.safeJson(decodeIface.decodeFunctionData(f, data0))}`); else log('WARN selector not in verified ABI'); } catch { log('WARN selector not in verified ABI'); } }
   if (dynamic) log(`dynamic calldata now: ${data0.slice(0, 140)}${data0.length > 140 ? '…' : ''}`);

@@ -165,7 +165,8 @@ function argGuess(input, ctx) {
   const abis = await Promise.all(withCode.map(a => L.sourcifyAbiCached(ethers.getAddress(a))));
   for (let i = 0; i < withCode.length; i++) {
     const addr = ethers.getAddress(withCode[i]);
-    const c = { address: addr, ctx: ex.addrs.get(withCode[i]) ? [...ex.addrs.get(withCode[i]).ctx] : [], codeBytes: (codes[cands.indexOf(withCode[i])].length - 2) / 2, sourcify: abis[i] ? abis[i].match : null };
+    const c = { address: addr, ctx: ex.addrs.get(withCode[i]) ? [...ex.addrs.get(withCode[i]).ctx] : [], codeBytes: (codes[cands.indexOf(withCode[i])].length - 2) / 2, sourcify: abis[i] ? abis[i].match : null, verified: !!abis[i] };
+    if (!abis[i]) out.warnings.push(`UNVERIFIED contract: ${addr} — no Sourcify ABI; fire.js refuses it without --allowUnverified + the user's explicit "lanjut tanpa verifikasi" for this contract`);
     let iface = null;
     if (abis[i]) iface = new ethers.Interface(abis[i].abi);
     else if (siteIface) { iface = siteIface; c.abiFrom = 'site-bundle'; }
@@ -178,13 +179,14 @@ function argGuess(input, ctx) {
       if (!iface) c.note = 'no site ABI selector found in bytecode';
     }
     if (iface) await probe(c, iface, out, !!abis[i]);
+    else c.gate = { verified: !!abis[i], owned: null, priceWei: null, priceZero: null, sim: 'no-abi' };
     out.contracts.push(c);
   }
   // order: contracts with mint candidates first
   out.contracts.sort((a, b) => ((b.mintFns || []).length > 0) - ((a.mintFns || []).length > 0) || b.codeBytes - a.codeBytes);
   out.elapsed = el();
   print(out);
-  if (opt.json) fs.writeFileSync(path.join(__dirname, 'runs', `recon_${Date.now()}.json`), L.safeJson(out));
+  if (opt.json) { fs.mkdirSync(path.join(__dirname, 'runs'), { recursive: true }); fs.writeFileSync(path.join(__dirname, 'runs', `recon_${Date.now()}.json`), L.safeJson(out)); }
   clearTimeout(HARD);
   process.exit(0);
 })().catch(e => { console.error('recon ERR', e.stack || e.message); process.exit(1); });
@@ -249,6 +251,30 @@ async function probe(c, iface, out, verified) {
   // find price getter -> suggest value for payable paid mint
   const priceKey = Object.keys(c.getters).find(k => /price|cost|fee/i.test(k) && /^\d+$/.test(String(c.getters[k]).split(' ')[0]));
   if (priceKey) c.priceHint = `${priceKey}=${c.getters[priceKey]} wei = ${ethers.formatEther(String(c.getters[priceKey]).split(' ')[0])} BNB per unit (check units!)`;
+  // ---- pre-open gate (brief item 16): the gates that CAN be checked
+  // before the sale opens run automatically here. Gates that CANNOT be
+  // checked pre-open — the Binance preview (RISK / allowance / authority
+  // / balance-change) — are NOT in this summary; fire.js enforces them.
+  let owned = null;
+  try {
+    const bf = iface.getFunction('balanceOf');
+    if (bf) {
+      const r = await L.rpc('eth_call', [{ from: W, to: c.address, data: iface.encodeFunctionData('balanceOf', [W]) }, 'latest'], { timeoutMs: 5000 });
+      owned = BigInt(iface.decodeFunctionResult('balanceOf', r)[0]) > 0n;
+    }
+  } catch { owned = null; }
+  const priceWei = priceKey ? String(c.getters[priceKey]).split(' ')[0] : null;
+  let sim = 'none';
+  if (c.mintFns && c.mintFns.length) {
+    const sims = c.mintFns.map(m => m.sim || '');
+    if (sims.some(s => s === 'OK')) sim = 'ok';
+    else if (sims.some(s => /NotStarted|NotOpen|NotLive|TooEarly|Paused/i.test(s))) sim = 'not-started (expected pre-open)';
+    else if (sims.some(s => s.startsWith('REVERT'))) sim = 'revert';
+    else sim = 'unknown';
+  }
+  c.gate = { verified, owned, priceWei, priceZero: priceWei == null ? null : priceWei === '0', sim };
+  if (owned === true) out.warnings.push(`already owned: ${c.address} — balanceOf(wallet) > 0, gate fails (not already owned)`);
+  if (priceWei != null && priceWei !== '0') out.warnings.push(`not free (price ${priceWei} wei): ${c.address} — gate fails (price 0)`);
 }
 
 function fmtVal(d, f) {
@@ -270,6 +296,8 @@ function print(o) {
   if (o.eoas.length) P(`EOAs (no code): ${o.eoas.map(e => e.address + (e.ctx.length ? ' [' + e.ctx.join('/') + ']' : '')).join(', ')}`);
   for (const c of o.contracts) {
     P(`\n## ${c.address} ${c.role || ''} code=${c.codeBytes}B sourcify=${c.sourcify || 'no'}${c.abiFrom ? ' abi=' + c.abiFrom : ''} ${c.ctx.length ? '[' + c.ctx.join('/') + ']' : ''}`);
+    if (!c.verified) P('  ⚠ UNVERIFIED CONTRACT — no Sourcify ABI (site-bundle ABI only, if any). fire.js REFUSES this contract unless --allowUnverified is passed, and only on the user\'s explicit "lanjut tanpa verifikasi" for this contract.');
+    if (c.gate) P(`  GATE pre-open: verified=${c.gate.verified ? 'yes' : 'NO'} | owned=${c.gate.owned == null ? 'unknown' : c.gate.owned ? 'YES (already owned)' : 'no'} | price=${c.gate.priceWei == null ? 'unknown (no price getter)' : c.gate.priceWei === '0' ? '0 (free)' : c.gate.priceWei + ' wei (NOT free)'} | sim=${c.gate.sim} (preview gate NOT checkable pre-open — enforced by fire.js)`);
     if (c.getters) {
       const bad = [];
       const full = c.mintFns && c.mintFns.length; let shown = 0;
@@ -285,6 +313,7 @@ function print(o) {
         P(`   * ${m.sig}${m.payable ? ' PAYABLE' : ''} ${m.selector}  params(${m.params})`);
         P(`     sim(value 0): ${m.sim || 'n/a'}${m.vhint ? '  | value hint: ' + m.vhint : ''}`);
         if (m.data) P(`     fire: ./fastmint.sh fire --to ${c.address} --data ${m.data.length > 300 ? m.data.slice(0, 300) + '…' : m.data} --value ${m.payable ? '<BNB> --maxValue <BNB>' : '0'} --start ${c.startHint || 'HH:MM'} --dry`);
+        if (m.data && !c.verified) P('     NOTE: contract UNVERIFIED — add --allowUnverified only on the user\'s explicit "lanjut tanpa verifikasi" for this contract.');
       }
     }
     if (c.writes && c.writes.length) P(`  writes: ${c.writes.join(' | ').slice(0, 900)}`);

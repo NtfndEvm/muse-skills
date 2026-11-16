@@ -81,6 +81,29 @@ Override with `--waitOn <regex>` and `--fatalOn <regex>`.
 - The `binance-agentic-wallet` skill from https://github.com/binance/binance-skills-hub (optional but recommended, for other wallet operations).
 - Optional: an **Agent ID** (`yourname.ai`) for mints that require one.
 
+### Supported platform and limitations
+
+**Supported:** Binance Agentic Wallet CLI (`baw`) + BNB Smart Chain (chain 56)
++ Developer Mode on in the Binance App + Node.js ≥ 20. That is the whole
+platform this skill is built and measured on.
+
+**Not supported:** any other chain (no Ethereum, Solana, or other EVM chain),
+any other wallet (no MetaMask, no private-key signing, no direct send — the
+two-step `preview` → `execute` through `baw` is the only execution path),
+and any environment without Developer Mode.
+
+**Clock check is mandatory before a scheduled fire.** Run
+`./fastmint.sh bench` and read the `clock offset …ms (…)` line it prints
+first: it shows the NTP correction `fire.js` will use and where it came
+from. `fire.js` logs the same offset again when it starts. If the source is
+`none` (no `sntp` on this machine — Linux has none by default), the clock
+is uncorrected: do not promise sub-second timing, fix NTP first, and say so
+in the report. Never schedule a fire without having seen that line.
+
+**One wallet, one mint per sale.** The connected wallet mints a sale once.
+Never mint the same sale from a second wallet or account — that is sybil
+farming, banned by the `airdrop-hunter` skill and by nearly every project.
+
 ### Installing the skill
 
 Extract the zip, then put the `fastmint-fcfs` folder wherever your agent reads skills from:
@@ -212,9 +235,10 @@ Does everything up to the preview, then stops. Check that the `call = …` line 
 | `--once` | | one preview, one execute, no retry |
 | `--dry` | | stop before execute (`--noPreview`: before preview) |
 | `--gateSim` | | rehearsal: ignore eth_call OK before start |
-| `--expectNft <n>` | | execute only if the preview shows exactly n NFTs from `--to` entering the wallet |
+| `--expectNft <n>` | | execute only if the preview shows exactly n NFTs from `--to` entering the wallet (mandatory when the expected count is known; without it fire.js warns "tidak ada verifikasi hasil") |
+| `--allowUnverified` | | allow a contract with no Sourcify ABI — only on the user's explicit "lanjut tanpa verifikasi" for that contract; without it fire.js refuses unverified targets |
+| `--gasLimit <n>` | | forwarded to the preview, only on user request; refused above 400000 (preview gas above ~400000 also refuses) |
 | `--noEager` / `--noWs` | | disable the head / WebSocket trigger |
-| `--gasLimit <n>` | | forwarded to the preview, only on user request |
 | `--from 0x..` | baw wallet | sender address |
 | `--abi 0x..` | `--to` | another address whose ABI is used to decode errors |
 | `--waitOn` / `--fatalOn <regex>` | | override revert classification |
@@ -276,6 +300,7 @@ These are what make the agent safe to run without close supervision. None may be
 7. **The preview must pass**: `simulationCode 000000000`, no allowance/authority change, no RISK, native outflow ≤ cap + 0.003 BNB, `parsedTx.amount` = 0 for a 0-value call, `requestId` present, and `--expectNft` when set.
 8. **`PENDING_CONFIRMATION`** → the user approves in the app; do not resend.
 9. **Premium RPC keys are never printed**: every log carries the host only.
+10. **Unverified contracts refuse by default.** A contract with no Sourcify ABI stops `fire.js` unless `--allowUnverified` is passed on the user's explicit "lanjut tanpa verifikasi" for that contract. A preview estimating more than ~400000 gas refuses; `--gasLimit` above 400000 is refused at startup.
 
 ---
 
@@ -317,6 +342,7 @@ All from one machine in Indonesia, 11 Nov 2026, over encrypted DNS.
 | `baw wallet status` = `UNCONNECTED` | session expired (2 days idle) | user signs in again; the agent must not do it automatically |
 | `351802` / `351804` | Developer Mode off / expired / balance above the cap | turn it on in the Binance App, then retry |
 | `351803` `AGENT_DEV_MODE_RISK_BLOCKED` | Binance blocks the contract | stop, show the risk text, do not bypass |
+| UNVERIFIED contract / fire.js refuses | no Sourcify ABI | stop; only `--allowUnverified` on the user's explicit "lanjut tanpa verifikasi" for that contract |
 | `351805` `simulation failed` repeatedly | mint not open on Binance's node, or wrong arguments | normal before the opening time; if eth_call has been OK for a while, inspect the preview JSON in `runs/` |
 | `NotStarted` forever | wrong opening time | compare the contract getter against the site; is `--timeout` enough? |
 | `SoldOut` / `FreeGone` | gone | terminal; do not switch to a paid mint without "ok paid" + an amount |

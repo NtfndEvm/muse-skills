@@ -81,6 +81,29 @@ Override dengan `--waitOn <regex>` dan `--fatalOn <regex>`.
 - Skill `binance-agentic-wallet` dari https://github.com/binance/binance-skills-hub (opsional tapi disarankan, untuk operasi wallet lain).
 - Opsional: **Agent ID** (`namamu.ai`) untuk mint yang mensyaratkan Agent ID.
 
+### Platform yang didukung dan batasan
+
+**Didukung:** Binance Agentic Wallet CLI (`baw`) + BNB Smart Chain (chain 56)
++ Developer Mode aktif di Binance App + Node.js ≥ 20. Hanya itulah platform
+yang dipakai untuk membangun dan mengukur skill ini.
+
+**Tidak didukung:** chain lain (bukan Ethereum, Solana, atau chain EVM lain),
+wallet lain (bukan MetaMask, bukan signing dengan private key, bukan kirim
+langsung — satu-satunya jalur eksekusi adalah dua langkah `preview` →
+`execute` lewat `baw`), dan environment tanpa Developer Mode.
+
+**Cek jam wajib sebelum fire berjadwal.** Jalankan `./fastmint.sh bench`
+dan baca baris `clock offset …ms (…)` yang dicetak pertama: baris itu
+menunjukkan koreksi NTP yang akan dipakai `fire.js` dan sumbernya. `fire.js`
+mencatat offset yang sama lagi saat mulai. Kalau sumbernya `none` (tidak ada
+`sntp` di mesin ini — Linux default tidak punya), jam tidak terkoreksi: jangan
+janjikan timing sub-detik, perbaiki NTP dulu, dan sampaikan itu di laporan.
+Jangan pernah menjadwalkan fire tanpa melihat baris itu.
+
+**Satu wallet, satu mint per sale.** Wallet yang terhubung mint satu sale satu
+kali. Jangan pernah mint sale yang sama dari wallet atau akun kedua — itu
+sybil farming, dilarang skill `airdrop-hunter` dan hampir semua proyek.
+
 ### Pasang skill
 
 Ekstrak zip, lalu taruh folder `fastmint-fcfs` di tempat agent-mu membaca skill:
@@ -212,9 +235,10 @@ Melakukan semua hal sampai preview lalu berhenti. Cek baris `call = …` mendeko
 | `--once` | | satu preview, satu execute, tanpa retry |
 | `--dry` | | berhenti sebelum execute (`--noPreview`: sebelum preview) |
 | `--gateSim` | | latihan: abaikan eth_call OK sebelum start |
-| `--expectNft <n>` | | execute hanya jika preview menunjukkan tepat n NFT dari `--to` masuk ke wallet |
+| `--expectNft <n>` | | execute hanya jika preview menunjukkan tepat n NFT dari `--to` masuk ke wallet (wajib kalau jumlah yang diharapkan sudah diketahui; tanpanya fire.js memperingatkan "tidak ada verifikasi hasil") |
+| `--allowUnverified` | | mengizinkan kontrak tanpa ABI Sourcify — hanya atas "lanjut tanpa verifikasi" eksplisit dari pengguna untuk kontrak itu; tanpanya fire.js menolak target tak terverifikasi |
+| `--gasLimit <n>` | | diteruskan ke preview, hanya kalau pengguna minta; ditolak di atas 400000 (gas preview di atas ~400000 juga ditolak) |
 | `--noEager` / `--noWs` | | matikan pemicu head / WebSocket |
-| `--gasLimit <n>` | | diteruskan ke preview, hanya kalau pengguna minta |
 | `--from 0x..` | wallet baw | alamat pengirim |
 | `--abi 0x..` | `--to` | alamat lain yang ABI-nya dipakai untuk dekode error |
 | `--waitOn` / `--fatalOn <regex>` | | override klasifikasi revert |
@@ -276,6 +300,7 @@ Ini yang membuat agent aman dijalankan tanpa pengawasan ketat. Tidak ada yang bo
 7. **Preview wajib lolos**: `simulationCode 000000000`, tanpa allowance/authority change, tanpa RISK, outflow native ≤ cap + 0.003 BNB, `parsedTx.amount` = 0 untuk call value 0, `requestId` ada, dan `--expectNft` kalau dipasang.
 8. **`PENDING_CONFIRMATION`** → pengguna menyetujui di app, tidak dikirim ulang.
 9. **Kunci RPC premium** tidak pernah tercetak: semua log hanya memuat host.
+10. **Kontrak tak terverifikasi ditolak secara default.** Kontrak tanpa ABI Sourcify menghentikan `fire.js` kecuali `--allowUnverified` dipasang atas "lanjut tanpa verifikasi" eksplisit pengguna untuk kontrak itu. Preview dengan estimasi gas di atas ~400000 ditolak; `--gasLimit` di atas 400000 ditolak saat startup.
 
 ---
 
@@ -317,6 +342,7 @@ Semua dari satu mesin di Indonesia, 11 Nov 2026, via DNS terenkripsi.
 | `baw wallet status` = `UNCONNECTED` | sesi habis (2 hari idle) | pengguna sign-in ulang; agent tidak boleh otomatis |
 | `351802` / `351804` | Developer Mode mati / kedaluwarsa / saldo melebihi cap | nyalakan di Binance App, lalu ulang |
 | `351803` `AGENT_DEV_MODE_RISK_BLOCKED` | Binance memblokir kontrak | berhenti, tunjukkan teks risiko, jangan dibypass |
+| Kontrak UNVERIFIED / fire.js menolak | tidak ada ABI Sourcify | berhenti; hanya `--allowUnverified` atas "lanjut tanpa verifikasi" eksplisit pengguna untuk kontrak itu |
 | `351805` `simulation failed` terus-menerus | mint belum buka di node Binance, atau argumen salah | normal sebelum jam buka; kalau eth_call sudah OK lama, cek JSON preview di `runs/` |
 | `NotStarted` selamanya | jam buka salah | bandingkan getter kontrak vs situs; `--timeout` cukup? |
 | `SoldOut` / `FreeGone` | habis | terminal; jangan pindah ke mint berbayar tanpa "ok paid" + jumlah |
