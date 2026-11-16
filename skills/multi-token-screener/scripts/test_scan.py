@@ -324,5 +324,74 @@ class TestCallReaderKompatibel(unittest.TestCase):
         self.assertEqual(seen, {"now_ms": None, "lama": True})
 
 
+class TestWarningsBukanVeto(unittest.TestCase):
+    """Butir 7 brief: extension >3 ATR di atas VWAP dan target < target profit
+    user 5% muncul sebagai peringatan terstruktur — verdict TIDAK berubah."""
+
+    def tearDown(self):
+        scan._reader = None
+
+    def test_extension_di_atas_3_atr_memicu_peringatan(self):
+        w = scan.scan_warnings({"vwap_jarak_atr": 3.5, "room_pct": 8.0})
+        self.assertEqual(len(w), 1)
+        self.assertIn("VWAP", w[0])
+        self.assertIn("3 ATR", w[0])
+
+    def test_extension_tepat_3_atr_tidak_memicu(self):
+        self.assertEqual(scan.scan_warnings({"vwap_jarak_atr": 3.0, "room_pct": 8.0}), [])
+        self.assertEqual(scan.scan_warnings({"vwap_jarak_atr": -1.0, "room_pct": 8.0}), [])
+
+    def test_target_di_bawah_5_persen_memicu_peringatan(self):
+        w = scan.scan_warnings({"vwap_jarak_atr": 1.0, "room_pct": 4.5})
+        self.assertEqual(len(w), 1)
+        self.assertIn("TARGET", w[0])
+        self.assertIn("5%", w[0])
+
+    def test_target_tepat_5_persen_tidak_memicu(self):
+        self.assertEqual(scan.scan_warnings({"vwap_jarak_atr": 1.0, "room_pct": 5.0}), [])
+
+    def test_data_normal_tanpa_peringatan(self):
+        self.assertEqual(scan.scan_warnings({"vwap_jarak_atr": 1.0, "room_pct": 8.0}), [])
+        self.assertEqual(scan.scan_warnings({}), [])
+
+    def test_kedua_peringatan_bisa_muncul_bersamaan(self):
+        w = scan.scan_warnings({"vwap_jarak_atr": 4.2, "room_pct": 2.0})
+        self.assertEqual(len(w), 2)
+
+    def test_lolos_tetap_lolos_meski_ada_peringatan(self):
+        # Extension 4,2 ATR + ruang 8%: LOLOS, tapi peringatan extension tampil.
+        with_reader(reading(breakout="BREAKOUT_TERKONFIRMASI", resistance=[(1.08, 1.0)],
+                            vwap=1.0, vwap_jarak_atr=4.2))
+        tick = {"BEAMUSDT": scan.parse_ticker(ticker_row("BEAM", last="1.0", bid="0.9995", ask="1.0005"))}
+        r = scan.analyze("BEAM", tick, "http://x", set(), NOW, FakeNet([], candle_rows()))
+        self.assertEqual(r["verdict"], "LOLOS")
+        self.assertEqual(len(r["warnings"]), 1)
+        self.assertIn("VWAP", r["warnings"][0])
+        out = scan.render_table([r], NOW)
+        self.assertIn("Peringatan (bukan veto", out)
+        self.assertIn("VWAP", out)
+        self.assertIn("LOLOS", out)
+        self.assertIn("VWAP", scan.to_json_obj(r)["warnings"][0])
+
+    def test_lolos_dengan_ruang_4_5_persen_dapat_peringatan_target(self):
+        # Ruang 4,5% lolos aturan room 4% (LOLOS) tapi di bawah target profit 5%.
+        with_reader(reading(breakout="BREAKOUT_TERKONFIRMASI", resistance=[(1.045, 1.0)],
+                            vwap=0.99, vwap_jarak_atr=1.0))
+        tick = {"BEAMUSDT": scan.parse_ticker(ticker_row("BEAM", last="1.0", bid="0.9995", ask="1.0005"))}
+        r = scan.analyze("BEAM", tick, "http://x", set(), NOW, FakeNet([], candle_rows()))
+        self.assertEqual(r["verdict"], "LOLOS")
+        self.assertEqual(len(r["warnings"]), 1)
+        self.assertIn("TARGET", r["warnings"][0])
+
+    def test_tanpa_peringatan_tabel_tidak_punya_bagian_peringatan(self):
+        with_reader(reading(breakout="BREAKOUT_TERKONFIRMASI", resistance=[(1.08, 1.0)],
+                            vwap=1.0, vwap_jarak_atr=1.0))
+        tick = {"BEAMUSDT": scan.parse_ticker(ticker_row("BEAM", last="1.0", bid="0.9995", ask="1.0005"))}
+        r = scan.analyze("BEAM", tick, "http://x", set(), NOW, FakeNet([], candle_rows()))
+        self.assertEqual(r["verdict"], "LOLOS")
+        self.assertEqual(r["warnings"], [])
+        self.assertNotIn("Peringatan (bukan veto", scan.render_table([r], NOW))
+
+
 if __name__ == "__main__":
     unittest.main()

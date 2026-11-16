@@ -36,6 +36,10 @@ import vwap as vwap_mod  # noqa: E402
 
 WIB = timezone(timedelta(hours=7))
 BASE_URL = "https://api.bitget.com"
+# Workspace user (untuk default file lokal seperti watchlist.json).
+# Ubah lewat env MUSE_WORKSPACE; default ~/workspace.
+MUSE_WORKSPACE = Path(os.environ.get("MUSE_WORKSPACE") or "~/workspace").expanduser()
+DEFAULT_WATCHLIST_FILE = str(MUSE_WORKSPACE / "watchlist.json")
 CANDLE_MS = 15 * 60 * 1000
 MIN_CANDLES = 75
 MIN_VOLUME = 100_000.0
@@ -43,6 +47,8 @@ MAX_SPREAD_NET_RR = 1.5
 ROOM_MIN_PCT = 4.0   # ruang ke resistance terdekat minimal = target R:R 1:2 untuk stop 2%
 STALE_MS = 15 * 60 * 1000
 VOL_RATIO_HIGH = 1.5
+VWAP_EXT_ATR = 3.0            # extension di atas VWAP > ini (ATR) = lampu merah (evaluasi-diri 21)
+USER_PROFIT_TARGET_PCT = 5.0  # target profit user per trade (evaluasi-diri 14, 21)
 
 BIG_CAPS = {"BTC", "ETH", "BNB", "SOL", "XRP"}
 # Saham tokenisasi (prefiks R). Daftar blokir eksplisit; bila ragu token diikutkan
@@ -175,13 +181,14 @@ _reader = None
 
 
 def load_reader():
-    """Muat candle_reader.py. Urutan: env CANDLE_READER_DIR, ../../candle-reader-15m/scripts, ~/workspace/..."""
+    """Muat candle_reader.py. Urutan: env CANDLE_READER_DIR, lalu
+    skills/candle-reader-15m/scripts relatif terhadap repo ini.
+    Tidak ada lagi fallback hardcoded ke folder skill lokal di luar repo."""
     global _reader
     if _reader is not None:
         return _reader
     dirs = [os.environ.get("CANDLE_READER_DIR"),
-            str(HERE.parents[1] / "candle-reader-15m" / "scripts"),
-            str(Path("~/workspace/custom-skills/candle-reader-15m/scripts").expanduser())]
+            str(HERE.parents[1] / "candle-reader-15m" / "scripts")]
     for d in dirs:
         if d and (Path(d) / "candle_reader.py").exists():
             sys.path.insert(0, d)
@@ -198,7 +205,7 @@ def _accepts_now_ms(fn):
 
 
 def call_reader(reader, candles, now_ms=None):
-    """Panggil candle_reader.read() ASLI (~/workspace/.../candle-reader-15m).
+    """Panggil candle_reader.read() ASLI (skills/candle-reader-15m/scripts di repo ini).
 
     Bentuk asli (sudah dicocokkan 12 Nov 2026 di VM):
     - input: list dict {"ts","o","h","l","c","v"} — BUKAN list [ts,o,h,l,c,v].
@@ -431,9 +438,32 @@ def analyze(base, tickers, base_url, user_suggested, now_ms, fetcher=fetch_data)
     return finish(info)
 
 
+def scan_warnings(info):
+    """Peringatan terstruktur — BUKAN veto: tidak mengubah verdict decide().
+
+    (a) Extension: harga > 3 ATR di atas VWAP = lampu merah, rawan pullback
+        (evaluasi-diri 21: breakout dari posisi yang sudah sejauh itu rawan
+        pullback; angkanya dibaca tapi tidak dijadikan lampu merah).
+    (b) Target: target yang bisa dicapai sebelum resistance terdekat
+        (room_pct) < target profit user 5% — rencana tidak memenuhi target
+        profitnya sendiri (evaluasi-diri 14, 21).
+    """
+    warns = []
+    ext = info.get("vwap_jarak_atr")
+    if ext is not None and ext > VWAP_EXT_ATR:
+        warns.append(f"EXTENSION VWAP: harga {idn(ext, 1)} ATR di atas VWAP "
+                     f"(> {idn(VWAP_EXT_ATR, 0)} ATR) — lampu merah, rawan pullback")
+    room = info.get("room_pct")
+    if room is not None and room < USER_PROFIT_TARGET_PCT:
+        warns.append(f"TARGET DI BAWAH TARGET PROFIT: ruang ke resistance cuma "
+                     f"{fmt_pct(room, 1)} < target profit user {USER_PROFIT_TARGET_PCT:.0f}%")
+    return warns
+
+
 def finish(info):
     label, alasan = decide(info)
     info["verdict"], info["alasan"] = label, alasan
+    info["warnings"] = scan_warnings(info)
     return info
 
 
@@ -503,8 +533,12 @@ def render_table(results, now_ms):
         lines.append("  ".join(row[i].ljust(widths[i]) for i in range(len(widths))) + "  " + row[-1])
     lolos = [r["symbol"] for r in results if r["verdict"] == "LOLOS"]
     lines += ["", "Verdict: " + ("NO TRADE" if not lolos else
-                                 f"{len(lolos)} KANDIDAT ({', '.join(lolos)})"),
-              "Catatan: ini pembacaan kondisi, bukan sinyal dan bukan nasihat keuangan. Biaya memakai "
+                                 f"{len(lolos)} KANDIDAT ({', '.join(lolos)})")]
+    warned = [(r["symbol"], w) for r in results for w in r.get("warnings", [])]
+    if warned:
+        lines += ["", "Peringatan (bukan veto — verdict di atas tidak berubah):"]
+        lines += [f"  ⚠️ {sym}: {w}" for sym, w in warned]
+    lines += ["Catatan: ini pembacaan kondisi, bukan sinyal dan bukan nasihat keuangan. Biaya memakai "
               "asumsi ilustratif (fee 0,1% + 0,1% + spread aktual); fee bursa user belum terverifikasi.",
               "Net R:R stop 2% = (4 - break-even) / (2 + break-even), break-even = 0,1% + 0,1% + spread."]
     return "\n".join(lines)
@@ -515,6 +549,7 @@ def to_json_obj(r):
             "trend", "breakout", "bounce", "atr_pct", "last_closed_wib", "verdict", "alasan",
             "vwap", "vwap_jarak_atr", "volume_status", "status"]
     o = {k: r.get(k) for k in keys}
+    o["warnings"] = list(r.get("warnings", []))
     o["resistance"] = [{"harga": p, "jarak_atr": a} for p, a in r.get("resistance", [])]
     o["support"] = [{"harga": p, "jarak_atr": a} for p, a in r.get("support", [])]
     return o
@@ -614,7 +649,8 @@ def main(argv=None, now_ms=None, fetcher=fetch_data):
     ap = argparse.ArgumentParser(description="Pemindai token 15m (read-only, tanpa API key)")
     ap.add_argument("symbols", nargs="*", help="simbol, mis. BEAM DOS (akhiran USDT boleh)")
     ap.add_argument("--watchlist", action="store_true", help="cek trigger di watchlist.json")
-    ap.add_argument("--watchlist-file", default="~/workspace/watchlist.json")
+    ap.add_argument("--watchlist-file", default=DEFAULT_WATCHLIST_FILE,
+                      help="path watchlist.json (default $MUSE_WORKSPACE/watchlist.json)")
     ap.add_argument("--discover", type=int, metavar="N", help="cari N kandidat dari seluruh pasar")
     ap.add_argument("--skip", default="", help="simbol dilewati saat --discover, pisah koma")
     ap.add_argument("--user-suggested", default="", help="simbol disarankan user (volume jadi LOLOS BERSYARAT)")

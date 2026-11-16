@@ -5,6 +5,8 @@ description: Menyaring pair spot yang layak di-scalp berdasarkan data publik: vo
 
 # Scalp Setup Scanner (Spot)
 
+last_verified: 2026-11-17 — DexScreener API (200) dan GeckoTerminal API (200); cek ulang: skills/_shared/check_external.py
+
 Menyaring **kelayakan pair**, bukan memprediksi arah. Tujuannya mengeliminasi pair yang secara struktur merugikan scalper (spread lebar, likuiditas tipis, biaya terlalu besar) sebelum analisis setup dimulai.
 
 ## Aturan Mutlak

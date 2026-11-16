@@ -10,7 +10,8 @@ trade-journal.md (+ cadangan trade-journal.md.bak sebelum menulis).
   python trade.py close --id UAI-20261111-01 --exit 0.0414 --alasan "..."
   python trade.py status
 
-Lokasi jurnal: --journal, atau env TRADE_JOURNAL, atau ~/workspace/trade-journal.md
+Lokasi jurnal: --journal, atau env TRADE_JOURNAL, atau $MUSE_WORKSPACE/trade-journal.md
+(env MUSE_WORKSPACE default ~/workspace; TRADE_JOURNAL menang atas MUSE_WORKSPACE)
 """
 
 import argparse
@@ -34,7 +35,8 @@ MIN_NET_RR = 1.5
 MIN_VOLUME = 100_000.0
 MAX_JARAK_STOP_PCT = 20.0  # di atas ini dianggap tidak masuk akal -> berhenti
 BIG_CAPS = {"BTC", "ETH", "BNB", "SOL", "XRP"}
-DEFAULT_JOURNAL = Path(os.environ.get("TRADE_JOURNAL", "~/workspace/trade-journal.md")).expanduser()
+MUSE_WORKSPACE = Path(os.environ.get("MUSE_WORKSPACE") or "~/workspace").expanduser()
+DEFAULT_JOURNAL = Path(os.environ.get("TRADE_JOURNAL") or str(MUSE_WORKSPACE / "trade-journal.md")).expanduser()
 
 COLUMNS = ["ID", "Tanggal-jam rencana (WIB)", "Pair", "Venue", "Setup", "Zona entry",
            "Pemicu", "Stop", "Target", "Berlaku sampai", "Checklist",

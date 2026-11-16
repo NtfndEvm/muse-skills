@@ -1,0 +1,1 @@
+{"code": "00000", "data": [{"tradeId": "4", "side": "sell", "price": "2", "size": "5", "ts": "1762952403000"}, {"tradeId": "3", "side": "sell", "price": "2", "size": "5", "ts": "1762952402000"}, {"tradeId": "2", "side": "buy", "price": "2", "size": "15", "ts": "1762952401000"}, {"tradeId": "1", "side": "buy", "price": "2", "size": "10", "ts": "1762952400000"}]}
